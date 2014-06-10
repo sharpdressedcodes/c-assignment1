@@ -22,9 +22,24 @@
 #define MAX_OPTION_INPUT 1
 
 /* Boolean constants. */
+/*
 #define TRUE 1
 #define FALSE 0
+*/
 
+typedef enum {
+    FALSE = 0,
+    TRUE = 1
+} BOOLEAN;
+
+typedef BOOLEAN bool;
+
+#define STRING_MAX_SMALL 256
+#define STRING_MAX 1024
+
+#define ERROR_MEMORY "Error: memory allocation failed.\0"
+#define MIN_OPTION_FIBONACCI 1
+#define MAX_OPTION_FIBONACCI 40
 
 /* Function prototypes. */
 void fibonacciNumbers(int *);
@@ -35,3 +50,5 @@ void rookAndTheBishop(int *);
 
 void sessionSummary(int *optionStats);
 void readRestOfLine();
+
+bool getIntegerFromStdIn(int *result, int length, const char *message, int min, int max);
