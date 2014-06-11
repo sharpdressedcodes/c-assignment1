@@ -93,130 +93,6 @@ int main(void) {
 
 }
 
-bool getIntegerFromStdIn(int *result, int length, const char *message, int min,
-        int max) {
-
-    int i = 0;
-    char *s = NULL, *errorMessage = NULL, *s2 = NULL;
-    bool passed = FALSE;
-
-    if (!allocateMemory(&s, length + EXTRA_SPACES) ||
-        !allocateMemory(&errorMessage, STRING_MAX_SMALL))
-        return FALSE;
-
-    sprintf(errorMessage, "%s %d %s %d. %s",
-        "You must enter a number between",
-        min,
-        "and",
-        max,
-        "Try again.\n"
-    );
-
-    do {
-
-        fputs(message, stdout);
-        fgets(s, length + EXTRA_SPACES, stdin);
-
-        if (s[strlen(s) - 1] != '\n') {
-
-            fputs(errorMessage, stderr);
-            readRestOfLine();
-
-        } else {
-
-            s[strlen(s) - 1] = '\0';
-            i = (int) strtol(s, &s2, 10);
-
-            if (strcmp(s2, "") != 0 || i < min || i > max) {
-
-                fputs(errorMessage, stderr);
-                /* readRestOfLine ? */
-
-            } else {
-
-                *result = i;
-                passed = TRUE;
-
-                freeMemory(&s);
-                freeMemory(&errorMessage);
-
-            }
-
-        }
-
-    } while (!passed);
-
-    return TRUE;
-
-}
-
-bool getStringFromStdIn(char **result, int length, const char *message){
-
-    char *s = NULL, *errorMessage = NULL;
-    bool passed = FALSE;
-
-    if (!allocateMemory(&s, length + EXTRA_SPACES) ||
-        !allocateMemory(&errorMessage, STRING_MAX_SMALL))
-        return FALSE;
-
-    sprintf(errorMessage, "Invalid phone number! Try again.\n");
-
-    while (!passed) {
-
-        size_t len;
-
-        fputs(message, stdout);
-        fgets(s, length + EXTRA_SPACES, stdin);
-
-        len = strlen(s);
-
-        if (len < EXTRA_SPACES || s[len - 1] != '\n') {
-
-            fputs(errorMessage, stderr);
-            /*readRestOfLine();*/
-
-        } else {
-
-            s[strlen(s) - 1] = '\0';
-            strcpy(*result, s);
-            passed = TRUE;
-
-            freeMemory(&s);
-            freeMemory(&errorMessage);
-
-        }
-
-    }
-
-    return TRUE;
-
-}
-
-bool allocateMemory(char **memory, int size){
-
-    *memory = NULL;
-
-    if (size > 0)
-        *memory = malloc(sizeof(char) * size);
-
-    if (*memory == NULL){
-        fputs(ERROR_MEMORY, stderr);
-        return FALSE;
-    } else {
-        return TRUE;
-    }
-
-}
-
-void freeMemory(char **memory){
-
-    if (*memory != NULL){
-        free(*memory);
-        *memory = NULL;
-    }
-
-}
-
 /* Function fibonacciNumbers
  * This function prompts the user for a positive integer N. The first N
  * integers of the Fibonacci sequence are printed in a simple tabular format.
@@ -281,7 +157,9 @@ void fibonacciNumbers(int *optionStats) {
  */
 void phoneNumbers(int *optionStats) {
 
+    int i = 0 ;
     char *input = NULL, *output = NULL;
+    char *message = NULL;
     keypad_t *ptr, keypad[] = {
         {2, "ABC"},
         {3, "DEF"},
@@ -295,28 +173,25 @@ void phoneNumbers(int *optionStats) {
     };
 
     if (!allocateMemory(&input, STRING_MAX_SMALL) ||
-        !allocateMemory(&output, STRING_MAX_SMALL)){
+        !allocateMemory(&output, STRING_MAX_SMALL) ||
+        !allocateMemory(&message, STRING_MAX_SMALL)){
         optionStats[2]--;
         return;
     }
 
-    if (getStringFromStdIn(&input, STRING_MAX_SMALL, "Enter phone number: ")){
+    sprintf(message, "Enter phone number (max %d characters): ", STRING_MAX_SMALL);
 
-        int i;
+    if (getStringFromStdIn(&input, STRING_MAX_SMALL, message)){
 
         for (i = 0; i < strlen(input); i++){
 
             if (isalpha(input[i])){
 
                 for (ptr = keypad; ptr->digit != MAX_KEYPAD; ++ptr){
-
                     if (strchr(ptr->code, toupper(input[i])) != NULL){
-
                         output[i] = (char)(ptr->digit + '0');
                         break;
-
                     }
-
                 }
 
             } else {
@@ -334,14 +209,75 @@ void phoneNumbers(int *optionStats) {
 
     freeMemory(&input);
     freeMemory(&output);
+    freeMemory(&message);
 
 }
 
 /*
- Function firstLastStrings(). This function that finds the "first" and "last" words in a series of words. After the user enters the words, the function will determine which words would come first and last if the words were listed in dictionary order. The function must stop accepting input when the user enters a blank line, eg. just presses enter. Assume that no word is more than 20 letters long. An interactive session with the function might look like this:
+ Function firstLastStrings(). This function that finds the "first" and "last" words in a series of words.
+ After the user enters the words, the function will determine which words would come first and last if the
+ words were listed in dictionary order. The function must stop accepting input when the user enters a blank line,
+ eg. just presses enter. Assume that no word is more than 20 letters long. An interactive session with the function might look like this:
  This is menu option number 3 */
 
 void firstLastStrings(int *optionStats) {
+
+    int i = 0, bufferCount = 0, bufferPower = 1;
+    char *input = NULL, *message = NULL;
+    char *first = NULL, *last = NULL;
+    char *buffer[STRING_MAX];
+
+    if (!allocateMemory(&input, STRING_MAX_TINY) ||
+        !allocateMemory(&message, STRING_MAX_SMALL) ||
+        !allocateMemory(&first, STRING_MAX_TINY) ||
+        !allocateMemory(&last, STRING_MAX_TINY)){
+        optionStats[3]--;
+        return;
+    }
+
+    printf("Finding strings\n---------------\n\n");
+    sprintf(message, "Enter word (max %d characters, enter to quit): ", STRING_MAX_TINY);
+
+    while (getStringFromStdInNS(&input, STRING_MAX_TINY, message, FALSE) && strlen(input) > 0){
+
+        buffer[bufferCount] = malloc(strlen(input) + 1);
+        strcpy(buffer[bufferCount], input);
+
+        if (bufferCount >= STRING_MAX * bufferPower){
+            bufferPower++;
+            if (!allocateMemory(&buffer[bufferCount], STRING_MAX * bufferPower)){
+                optionStats[3]--;
+                return;
+            }
+        }
+
+        freeMemory(&input);
+        allocateMemory(&input, STRING_MAX_TINY);
+
+        bufferCount++;
+
+    }
+
+    if (bufferCount < MIN_OPTION_WORD_SERIES){
+        fprintf(stderr, "You must enter at least %d words. Try again.\n", MIN_OPTION_WORD_SERIES);
+        return;
+    }
+
+    qsort(buffer, bufferCount, sizeof(char*), bufferSortCallback);
+
+    strcpy(first, buffer[0]);
+    strcpy(last, buffer[bufferCount - 1]);
+
+    printf("Smallest word: %s\n", first);
+    printf("Largest word: %s\n", last);
+
+    freeMemory(&input);
+    freeMemory(&message);
+    freeMemory(&first);
+    freeMemory(&last);
+
+    for (i = 0; i < bufferCount; i++)
+        freeMemory(&buffer[i]);
 
 }
 
@@ -351,6 +287,33 @@ void firstLastStrings(int *optionStats) {
  */
 
 void wordStopping(int *optionStats) {
+
+    /*if (getStringFromStdIn(&input, STRING_MAX_TINY, message)){
+
+            char *chr = strchr(input, WORD_SEPARATOR);
+
+            if (chr == NULL){
+
+                fputs("You must enter at least 2 words. Try again.\n", stderr);
+
+            } else {
+
+                int i, pos = chr - input + 1;
+
+                for (i = 0; i < pos; i++)
+                    first[i] = input[i];
+
+                chr = strrchr(input, WORD_SEPARATOR);
+                pos = chr - input + 1;
+
+                for (i = pos; i < strlen(input); i++)
+                    last[i] = input[i];
+
+
+
+            }
+
+        }*/
 
 }
 
@@ -386,3 +349,175 @@ void readRestOfLine() {
 
 }
 
+
+bool getIntegerFromStdIn(int *result, int length, const char *message, int min,
+        int max) {
+
+    int i = 0;
+    char *s = NULL, *errorMessage = NULL, *s2 = NULL;
+    bool passed = FALSE;
+
+    if (!allocateMemory(&s, length + EXTRA_SPACES) ||
+        !allocateMemory(&errorMessage, STRING_MAX_SMALL))
+        return FALSE;
+
+    sprintf(errorMessage, "%s %d %s %d. %s",
+        "You must enter a number between",
+        min,
+        "and",
+        max,
+        "Try again.\n"
+    );
+
+    do {
+
+        fputs(message, stdout);
+        fgets(s, length + EXTRA_SPACES, stdin);
+
+        if (s[strlen(s) - 1] != '\n') {
+
+            fputs(errorMessage, stderr);
+            readRestOfLine();
+
+        } else {
+
+            s[strlen(s) - 1] = '\0';
+            i = (int) strtol(s, &s2, 10);
+
+            if (strcmp(s2, "") != 0 || i < min || i > max) {
+
+                fputs(errorMessage, stderr);
+                /* readRestOfLine ? */
+
+            } else {
+
+                *result = i;
+                passed = TRUE;
+
+                freeMemory(&s);
+                freeMemory(&errorMessage);
+
+            }
+
+        }
+
+    } while (!passed);
+
+    return TRUE;
+
+}
+
+bool getStringFromStdInNS(char **result, int length, const char *message, bool showError){
+
+    char *s = NULL, *errorMessage = NULL;
+    bool passed = FALSE;
+
+    if (!allocateMemory(&s, length + EXTRA_SPACES) ||
+        !allocateMemory(&errorMessage, STRING_MAX_SMALL))
+        return FALSE;
+
+    if (showError)
+        sprintf(errorMessage, "Invalid entry! Try again.\n");
+
+    while (!passed) {
+
+        size_t len;
+
+        fputs(message, stdout);
+        fgets(s, length + EXTRA_SPACES, stdin);
+
+        len = strlen(s);
+
+        if (len < EXTRA_SPACES || s[len - 1] != '\n') {
+
+            if (showError){
+                fputs(errorMessage, stderr);
+                /*readRestOfLine();*/
+            } else {
+
+                strcpy(*result, "\0");
+                passed = TRUE;
+
+                freeMemory(&s);
+                freeMemory(&errorMessage);
+            }
+
+        } else {
+
+            s[len - 1] = '\0';
+            strcpy(*result, s);
+            passed = TRUE;
+
+            freeMemory(&s);
+            freeMemory(&errorMessage);
+
+        }
+
+    }
+
+    return TRUE;
+
+}
+
+bool getStringFromStdIn(char **result, int length, const char *message){
+
+    return getStringFromStdInNS(result, length, message, TRUE);
+
+}
+
+bool allocateMemory(char **memory, int size){
+
+    if (size > 0)
+        *memory = realloc(*memory, sizeof(char) * size);
+
+    if (*memory == NULL){
+        fputs(ERROR_MEMORY, stderr);
+        return FALSE;
+    } else {
+        return TRUE;
+    }
+
+}
+
+void freeMemory(char **memory){
+
+    if (*memory != NULL){
+        free(*memory);
+        *memory = NULL;
+    }
+
+}
+
+int bufferSortCallback(const void *a, const void *b){
+
+    const char **ptr1 = (const char **)a;
+    const char **ptr2 = (const char **)b;
+
+    return strcasecmp(*ptr1, *ptr2);
+
+}
+
+/*int getArrayIndex(char *array[], int length, char *search){
+
+    int pos = 0;
+    int start = 0;
+    int finish = length - 1;
+    int comparison = 0;
+
+    while (start <= finish){
+
+        pos = (start + finish) >> 1;
+        comparison = strcmp(array[pos], search);
+
+        if (comparison == 0)
+            return pos;
+        else if (comparison < 0)
+            start = pos + 1;
+        else
+            finish = pos - 1;
+
+    }
+
+    return -1;
+
+}*/

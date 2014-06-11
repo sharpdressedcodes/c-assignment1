@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <strings.h>
 #include <ctype.h>
 
 /* Constants. */
@@ -43,14 +44,18 @@ typedef struct keypad_t {
 
 #define MAX_KEYPAD 10
 
+#define STRING_MAX_TINY 20
 #define STRING_MAX_SMALL 256
 #define STRING_MAX 1024
 
-#define ERROR_MEMORY "Error: memory allocation failed.\0"
+#define ERROR_MEMORY "Error: memory allocation failed.\n"
 #define MIN_OPTION_FIBONACCI 1
 #define MAX_OPTION_FIBONACCI 40
 #define FIBONACCI_NUM1 0
 #define FIBONACCI_NUM2 1
+
+#define WORD_SEPARATOR ' '
+#define MIN_OPTION_WORD_SERIES 3
 
 /* Function prototypes. */
 void fibonacciNumbers(int *);
@@ -63,6 +68,8 @@ void sessionSummary(int *optionStats);
 void readRestOfLine();
 
 bool getIntegerFromStdIn(int *result, int length, const char *message, int min, int max);
-bool getStringFromStdIn(char **result, int length, const char *message);
+bool getStringFromStdInNS(char **result, int length, const char *message, bool showError);
+bool getStringFromStdIn(char **result, int length, const char *message); /* NS for not silent*/
 bool allocateMemory(char **memory, int size);
 void freeMemory(char **memory);
+int bufferSortCallback(const void *a, const void *b);
