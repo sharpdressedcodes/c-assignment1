@@ -109,7 +109,7 @@ bool getIntegerFromStdIn(int *result, int length, const char *message, int min,
         min,
         "and",
         max,
-        "Try again."
+        "Try again.\n"
     );
 
     do {
@@ -159,17 +159,21 @@ bool getStringFromStdIn(char **result, int length, const char *message){
         !allocateMemory(&errorMessage, STRING_MAX_SMALL))
         return FALSE;
 
-    sprintf(errorMessage, "Your entry is too long! Try again.");
+    sprintf(errorMessage, "Invalid phone number! Try again.\n");
 
     while (!passed) {
+
+        size_t len;
 
         fputs(message, stdout);
         fgets(s, length + EXTRA_SPACES, stdin);
 
-        if (s[strlen(s) - 1] != '\n') {
+        len = strlen(s);
+
+        if (len < EXTRA_SPACES || s[len - 1] != '\n') {
 
             fputs(errorMessage, stderr);
-            readRestOfLine();
+            /*readRestOfLine();*/
 
         } else {
 
@@ -296,7 +300,7 @@ void phoneNumbers(int *optionStats) {
         return;
     }
 
-    if (getStringFromStdIn(&input, STRING_MAX, "Enter phone number: ")){
+    if (getStringFromStdIn(&input, STRING_MAX_SMALL, "Enter phone number: ")){
 
         int i;
 
