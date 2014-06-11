@@ -20,14 +20,12 @@ int main(void) {
 
     int optionStats[NUM_OPTION_STATS];
 
-    char *menu = malloc(sizeof(char) * (STRING_MAX + 1));
+    char *menu = NULL;
     int i = 0, option = 0;
     bool passed = FALSE, abort = FALSE;
 
-    if (menu == NULL) {
-        fputs(ERROR_MEMORY, stderr);
+    if (!allocateMemory(&menu, STRING_MAX))
         return EXIT_FAILURE;
-    }
 
     for (i = 0; i < NUM_OPTION_STATS; i++)
         optionStats[0] = 0;
@@ -44,10 +42,9 @@ int main(void) {
         "Select your option: "
     );
 
-    do {
+    while (!abort) {
 
-        passed = getIntegerFromStdIn(&option, MAX_OPTION_INPUT, menu, 1,
-                NUM_OPTION_STATS + 1);
+        passed = getIntegerFromStdIn(&option, MAX_OPTION_INPUT, menu, 1, NUM_OPTION_STATS + 1);
 
         if (passed) {
 
@@ -55,33 +52,43 @@ int main(void) {
                 optionStats[option]++;
 
             switch (option) {
+
                 case 1:
                     fibonacciNumbers(optionStats);
                     break;
+
                 case 2:
                     phoneNumbers(optionStats);
                     break;
+
                 case 3:
                     firstLastStrings(optionStats);
                     break;
+
                 case 4:
                     wordStopping(optionStats);
                     break;
+
                 case 5:
                     rookAndTheBishop(optionStats);
                     break;
+
                 case 6:
                     sessionSummary(optionStats);
                     break;
+
                 case 7:
                     abort = TRUE;
                     break;
+
             }
+
         }
 
-    } while (!abort);
+    }
 
-    free(menu);
+    /*free(menu);*/
+    freeMemory(&menu);
 
     return EXIT_SUCCESS;
 
@@ -91,15 +98,12 @@ bool getIntegerFromStdIn(int *result, int length, const char *message, int min,
         int max) {
 
     int i = 0;
-    char *s = malloc(sizeof(char) * (length + EXTRA_SPACES));
-    char *errorMessage = malloc(sizeof(char) * (STRING_MAX_SMALL + 1));
-    char *s2 = NULL;
+    char *s = NULL, *errorMessage = NULL, *s2 = NULL;
     bool passed = FALSE;
 
-    if (s == NULL || errorMessage == NULL) {
-        fputs(ERROR_MEMORY, stderr);
+    if (!allocateMemory(&s, length + EXTRA_SPACES) ||
+        !allocateMemory(&errorMessage, STRING_MAX_SMALL))
         return FALSE;
-    }
 
     sprintf(errorMessage, "%s %d %s %d. %s",
         "You must enter a number between",
@@ -131,9 +135,9 @@ bool getIntegerFromStdIn(int *result, int length, const char *message, int min,
 
             } else {
 
+                freeMemory(&s);
+                freeMemory(&errorMessage);
                 *result = i;
-                free(s);
-                free(errorMessage);
                 passed = TRUE;
 
             }
@@ -143,6 +147,31 @@ bool getIntegerFromStdIn(int *result, int length, const char *message, int min,
     } while (!passed);
 
     return TRUE;
+
+}
+
+bool allocateMemory(char **memory, int size){
+
+    *memory = NULL;
+
+    if (size > 0)
+        *memory = malloc(sizeof(char) * size);
+
+    if (*memory == NULL){
+        fputs(ERROR_MEMORY, stderr);
+        return FALSE;
+    } else {
+        return TRUE;
+    }
+
+}
+
+void freeMemory(char **memory){
+
+    if (*memory != NULL){
+        free(*memory);
+        *memory = NULL;
+    }
 
 }
 
@@ -156,12 +185,18 @@ void fibonacciNumbers(int *optionStats) {
 
     int i = 0;
     int limit = 0;
-    int num1 = 0;
-    int num2 = 1;
+    int num1 = FIBONACCI_NUM1;
+    int num2 = FIBONACCI_NUM2;
     int sum = 0;
     float average = 0;
-    char message[STRING_MAX_SMALL];
-    char fibMax[STRING_MAX_SMALL];
+    char *message = NULL;
+    char *fibMax = NULL;
+
+    if (!allocateMemory(&message, STRING_MAX_SMALL) ||
+        !allocateMemory(&fibMax, STRING_MAX_SMALL)){
+        optionStats[1]--;
+        return;
+    }
 
     sprintf(fibMax, "%d", MAX_OPTION_FIBONACCI);
     sprintf(message, "Enter a positive integer (%d-%d): ",
@@ -183,8 +218,8 @@ void fibonacciNumbers(int *optionStats) {
             }
 
             sum += fibonacci;
-
             printf(i == limit ? "%-8d" : "%-8d ", fibonacci);
+
         }
 
         average = (float) sum / i;
@@ -194,6 +229,9 @@ void fibonacciNumbers(int *optionStats) {
 
     }
 
+    freeMemory(&message);
+    freeMemory(&fibMax);
+
 }
 
 /*
@@ -201,6 +239,27 @@ void fibonacciNumbers(int *optionStats) {
  */
 void phoneNumbers(int *optionStats) {
 
+    keypad_t keypad[] = {
+        {2, "ABC"},
+        {3, "DEF"},
+        {4, "GHI"},
+        {5, "JKL"},
+        {6, "MNO"},
+        {7, "PQRS"},
+        {8, "TUV"},
+        {9, "XYZ"},
+        {MAX_KEYPAD, NULL}
+    };
+
+    keypad_t *piterator;
+    /* char *input, *output */
+
+    for (piterator = keypad; piterator->digit != MAX_KEYPAD; ++piterator){
+        int i = 0;
+        for (; i < strlen(piterator->code); i++){
+            /*if (strcmp(iterator->code[i], ))*/
+        }
+    }
 }
 
 /*
@@ -208,6 +267,7 @@ void phoneNumbers(int *optionStats) {
  This is menu option number 3 */
 
 void firstLastStrings(int *optionStats) {
+
 }
 
 /*
@@ -224,12 +284,14 @@ void wordStopping(int *optionStats) {
  * menu option 5.
  */
 void rookAndTheBishop(int *optionStats) {
+
 }
 
 /* See requirement #7  "Session summary" of the assignment specs.
  * Function sessionSummary() reports the program usage.
  */
 void sessionSummary(int *optionStats) {
+
 }
 
 /*
@@ -237,6 +299,7 @@ void sessionSummary(int *optionStats) {
  */
 
 void readRestOfLine() {
+
     int c;
 
     /* Read until the end of the line or end-of-file. */
@@ -245,5 +308,6 @@ void readRestOfLine() {
 
     /* Clear the error and end-of-file flags. */
     clearerr(stdin);
+
 }
 

@@ -34,12 +34,21 @@ typedef enum {
 
 typedef BOOLEAN bool;
 
+typedef struct keypad_t {
+    int digit;
+    const char *code;
+} keypad_t;
+
+#define MAX_KEYPAD 10
+
 #define STRING_MAX_SMALL 256
 #define STRING_MAX 1024
 
 #define ERROR_MEMORY "Error: memory allocation failed.\0"
 #define MIN_OPTION_FIBONACCI 1
 #define MAX_OPTION_FIBONACCI 40
+#define FIBONACCI_NUM1 0
+#define FIBONACCI_NUM2 1
 
 /* Function prototypes. */
 void fibonacciNumbers(int *);
@@ -52,3 +61,5 @@ void sessionSummary(int *optionStats);
 void readRestOfLine();
 
 bool getIntegerFromStdIn(int *result, int length, const char *message, int min, int max);
+bool allocateMemory(char **memory, int size);
+void freeMemory(char **memory);
