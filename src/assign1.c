@@ -1,6 +1,6 @@
 /****************************************************************************
  * COSC2138/CPT 220 - Programming Principles 2A
- * Study Period 1  2014 Assignment #1 - Different Applications
+ * Study Period 2  2014 Assignment #1 - Different Applications
  * Full Name        : Greg Kappatos
  * Student Number   : s3460969
  * Start up code provided by the C-TEACH team
@@ -21,14 +21,16 @@ int main(void) {
     int optionStats[NUM_OPTION_STATS];
 
     char *menu = NULL;
-    int i = 0, option = 0;
-    bool passed = FALSE, abort = FALSE;
+    int i = 0;
+    int option = 0;
+    bool passed = FALSE;
+    bool abort = FALSE;
 
     if (!allocateMemory(&menu, STRING_MAX))
         return EXIT_FAILURE;
 
     for (i = 0; i < NUM_OPTION_STATS; i++)
-        optionStats[0] = 0;
+        optionStats[i] = 0;
 
     sprintf(menu, "%s%s%s%s%s%s%s%s%s",
         "\nMain Menu:\n",
@@ -48,8 +50,9 @@ int main(void) {
 
         if (passed) {
 
-            if (option <= NUM_OPTION_STATS)
-                optionStats[option]++;
+            /* change to if (option -1 < NUM_OPTION_STATS) if have to count session summary */
+            if (option < NUM_OPTION_STATS)
+                optionStats[option - 1]++;
 
             switch (option) {
 
@@ -112,7 +115,7 @@ void fibonacciNumbers(int *optionStats) {
 
     if (!allocateMemory(&message, STRING_MAX_SMALL) ||
         !allocateMemory(&fibMax, STRING_MAX_SMALL)){
-        optionStats[1]--;
+        /*optionStats[0]--;*/
         return;
     }
 
@@ -175,7 +178,7 @@ void phoneNumbers(int *optionStats) {
     if (!allocateMemory(&input, STRING_MAX_SMALL) ||
         !allocateMemory(&output, STRING_MAX_SMALL) ||
         !allocateMemory(&message, STRING_MAX_SMALL)){
-        optionStats[2]--;
+        /*optionStats[1]--;*/
         return;
     }
 
@@ -222,31 +225,41 @@ void phoneNumbers(int *optionStats) {
 
 void firstLastStrings(int *optionStats) {
 
-    int i = 0, bufferCount = 0, bufferPower = 1;
-    char *input = NULL, *message = NULL;
-    char *first = NULL, *last = NULL;
+    int i = 0;
+    int bufferCount = 0;
+    int bufferPower = 1;
+    char *input = NULL;
+    char *message = NULL;
+    char *first = NULL;
+    char *last = NULL;
+    char *dashed = NULL;
     char *buffer[STRING_MAX];
 
     if (!allocateMemory(&input, STRING_MAX_TINY) ||
         !allocateMemory(&message, STRING_MAX_SMALL) ||
         !allocateMemory(&first, STRING_MAX_TINY) ||
         !allocateMemory(&last, STRING_MAX_TINY)){
-        optionStats[3]--;
+        /*optionStats[2]--;*/
         return;
     }
 
-    printf("Finding strings\n---------------\n\n");
+    dashed = createDashes("Finding strings");
+    printf("%s\n", dashed);
     sprintf(message, "Enter word (max %d characters, enter to quit): ", STRING_MAX_TINY);
 
     while (getStringFromStdInNS(&input, STRING_MAX_TINY, message, FALSE) && strlen(input) > 0){
 
-        buffer[bufferCount] = malloc(strlen(input) + 1);
+        if (!allocateMemory(&buffer[bufferCount], strlen(input) + 1)){
+            /*optionStats[2]--;*/
+            return;
+        }
+
         strcpy(buffer[bufferCount], input);
 
         if (bufferCount >= STRING_MAX * bufferPower){
             bufferPower++;
             if (!allocateMemory(&buffer[bufferCount], STRING_MAX * bufferPower)){
-                optionStats[3]--;
+                /*optionStats[2]--;*/
                 return;
             }
         }
@@ -263,7 +276,7 @@ void firstLastStrings(int *optionStats) {
         return;
     }
 
-    qsort(buffer, bufferCount, sizeof(char*), bufferSortCallback);
+    qsort(buffer, bufferCount, sizeof(char*), wordSeriesSortCallback);
 
     strcpy(first, buffer[0]);
     strcpy(last, buffer[bufferCount - 1]);
@@ -275,6 +288,7 @@ void firstLastStrings(int *optionStats) {
     freeMemory(&message);
     freeMemory(&first);
     freeMemory(&last);
+    freeMemory(&dashed);
 
     for (i = 0; i < bufferCount; i++)
         freeMemory(&buffer[i]);
@@ -330,6 +344,28 @@ void rookAndTheBishop(int *optionStats) {
  */
 void sessionSummary(int *optionStats) {
 
+    int i = 0;
+    char *dashed = NULL;
+    char *title1 = NULL;
+    char *title2 = NULL;
+
+    if (!allocateMemory(&dashed, STRING_MAX_SMALL) ||
+        !allocateMemory(&title1, STRING_MAX_SMALL) ||
+        !allocateMemory(&title2, STRING_MAX_SMALL)){
+        return;
+    }
+
+    dashed = createDashes("Session summary");
+    printf("%sOption     Count\n------     -----\n", dashed);
+
+    /* remove -1 from loop check is have to print session summary count */
+    for (; i < NUM_OPTION_STATS - 1; i++)
+        printf("%6d     %5d\n", i + 1, optionStats[i]);
+
+    freeMemory(&dashed);
+    freeMemory(&title1);
+    freeMemory(&title2);
+
 }
 
 /*
@@ -354,7 +390,9 @@ bool getIntegerFromStdIn(int *result, int length, const char *message, int min,
         int max) {
 
     int i = 0;
-    char *s = NULL, *errorMessage = NULL, *s2 = NULL;
+    char *s = NULL;
+    char *s2 = NULL;
+    char *errorMessage = NULL;
     bool passed = FALSE;
 
     if (!allocateMemory(&s, length + EXTRA_SPACES) ||
@@ -409,7 +447,8 @@ bool getIntegerFromStdIn(int *result, int length, const char *message, int min,
 
 bool getStringFromStdInNS(char **result, int length, const char *message, bool showError){
 
-    char *s = NULL, *errorMessage = NULL;
+    char *s = NULL;
+    char *errorMessage = NULL;
     bool passed = FALSE;
 
     if (!allocateMemory(&s, length + EXTRA_SPACES) ||
@@ -488,12 +527,31 @@ void freeMemory(char **memory){
 
 }
 
-int bufferSortCallback(const void *a, const void *b){
+int wordSeriesSortCallback(const void *a, const void *b){
 
     const char **ptr1 = (const char **)a;
     const char **ptr2 = (const char **)b;
 
     return strcasecmp(*ptr1, *ptr2);
+
+}
+
+char *createDashes(const char *str){
+
+    int i = 0;
+    int len = strlen(str);
+    int max = (len << 1) + 2; /* including 2 \n's*/
+    char *dashes = NULL;
+
+    if (allocateMemory(&dashes, max + 1)){
+        sprintf(dashes, "%s\n", str);
+        for (i = len + 1; i < max - 1; i++)
+            dashes[i] = '-';
+        dashes[i++] = '\n';
+        dashes[i] = '\0';
+    }
+
+    return dashes;
 
 }
 

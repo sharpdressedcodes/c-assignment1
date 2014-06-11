@@ -72,4 +72,5 @@ bool getStringFromStdInNS(char **result, int length, const char *message, bool s
 bool getStringFromStdIn(char **result, int length, const char *message); /* NS for not silent*/
 bool allocateMemory(char **memory, int size);
 void freeMemory(char **memory);
-int bufferSortCallback(const void *a, const void *b);
+int wordSeriesSortCallback(const void *a, const void *b);
+char *createDashes(const char *str);
