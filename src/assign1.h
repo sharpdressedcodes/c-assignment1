@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <ctype.h>
+
 /* Constants. */
 #define NUM_OPTION_STATS 6
 
@@ -61,5 +63,6 @@ void sessionSummary(int *optionStats);
 void readRestOfLine();
 
 bool getIntegerFromStdIn(int *result, int length, const char *message, int min, int max);
+bool getStringFromStdIn(char **result, int length, const char *message);
 bool allocateMemory(char **memory, int size);
 void freeMemory(char **memory);

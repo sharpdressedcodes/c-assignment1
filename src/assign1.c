@@ -87,7 +87,6 @@ int main(void) {
 
     }
 
-    /*free(menu);*/
     freeMemory(&menu);
 
     return EXIT_SUCCESS;
@@ -115,7 +114,7 @@ bool getIntegerFromStdIn(int *result, int length, const char *message, int min,
 
     do {
 
-        puts(message);
+        fputs(message, stdout);
         fgets(s, length + EXTRA_SPACES, stdin);
 
         if (s[strlen(s) - 1] != '\n') {
@@ -135,16 +134,55 @@ bool getIntegerFromStdIn(int *result, int length, const char *message, int min,
 
             } else {
 
-                freeMemory(&s);
-                freeMemory(&errorMessage);
                 *result = i;
                 passed = TRUE;
+
+                freeMemory(&s);
+                freeMemory(&errorMessage);
 
             }
 
         }
 
     } while (!passed);
+
+    return TRUE;
+
+}
+
+bool getStringFromStdIn(char **result, int length, const char *message){
+
+    char *s = NULL, *errorMessage = NULL;
+    bool passed = FALSE;
+
+    if (!allocateMemory(&s, length + EXTRA_SPACES) ||
+        !allocateMemory(&errorMessage, STRING_MAX_SMALL))
+        return FALSE;
+
+    sprintf(errorMessage, "Your entry is too long! Try again.");
+
+    while (!passed) {
+
+        fputs(message, stdout);
+        fgets(s, length + EXTRA_SPACES, stdin);
+
+        if (s[strlen(s) - 1] != '\n') {
+
+            fputs(errorMessage, stderr);
+            readRestOfLine();
+
+        } else {
+
+            s[strlen(s) - 1] = '\0';
+            strcpy(*result, s);
+            passed = TRUE;
+
+            freeMemory(&s);
+            freeMemory(&errorMessage);
+
+        }
+
+    }
 
     return TRUE;
 
@@ -239,7 +277,8 @@ void fibonacciNumbers(int *optionStats) {
  */
 void phoneNumbers(int *optionStats) {
 
-    const keypad_t keypad[] = {
+    char *input = NULL, *output = NULL;
+    keypad_t *ptr, keypad[] = {
         {2, "ABC"},
         {3, "DEF"},
         {4, "GHI"},
@@ -251,24 +290,47 @@ void phoneNumbers(int *optionStats) {
         {MAX_KEYPAD, NULL}
     };
 
-    /*
-     * example input/outputs:
-     *
-     * CALLATT / 2255288
-     * 1-800-COL-LECT / 1-800-265-5328
-     *
-     * search for A-Z, anything else stays as it is.
-     * */
-
-    keypad_t *ptr;
-    /* char *input, *output */
-
-    for (ptr = keypad; ptr->digit != MAX_KEYPAD; ++ptr){
-        int i = 0;
-        for (; i < strlen(ptr->code); i++){
-            /*if (strcmp(iterator->code[i], ))*/
-        }
+    if (!allocateMemory(&input, STRING_MAX_SMALL) ||
+        !allocateMemory(&output, STRING_MAX_SMALL)){
+        optionStats[2]--;
+        return;
     }
+
+    if (getStringFromStdIn(&input, STRING_MAX, "Enter phone number: ")){
+
+        int i;
+
+        for (i = 0; i < strlen(input); i++){
+
+            if (isalpha(input[i])){
+
+                for (ptr = keypad; ptr->digit != MAX_KEYPAD; ++ptr){
+
+                    if (strchr(ptr->code, toupper(input[i])) != NULL){
+
+                        output[i] = (char)(ptr->digit + '0');
+                        break;
+
+                    }
+
+                }
+
+            } else {
+
+                output[i] = input[i];
+
+            }
+
+        }
+
+        output[i] = '\0';
+        printf("%s\n", output);
+
+    }
+
+    freeMemory(&input);
+    freeMemory(&output);
+
 }
 
 /*
