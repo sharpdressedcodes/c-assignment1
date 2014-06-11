@@ -239,7 +239,7 @@ void fibonacciNumbers(int *optionStats) {
  */
 void phoneNumbers(int *optionStats) {
 
-    keypad_t keypad[] = {
+    const keypad_t keypad[] = {
         {2, "ABC"},
         {3, "DEF"},
         {4, "GHI"},
@@ -251,12 +251,21 @@ void phoneNumbers(int *optionStats) {
         {MAX_KEYPAD, NULL}
     };
 
-    keypad_t *piterator;
+    /*
+     * example input/outputs:
+     *
+     * CALLATT / 2255288
+     * 1-800-COL-LECT / 1-800-265-5328
+     *
+     * search for A-Z, anything else stays as it is.
+     * */
+
+    keypad_t *ptr;
     /* char *input, *output */
 
-    for (piterator = keypad; piterator->digit != MAX_KEYPAD; ++piterator){
+    for (ptr = keypad; ptr->digit != MAX_KEYPAD; ++ptr){
         int i = 0;
-        for (; i < strlen(piterator->code); i++){
+        for (; i < strlen(ptr->code); i++){
             /*if (strcmp(iterator->code[i], ))*/
         }
     }
