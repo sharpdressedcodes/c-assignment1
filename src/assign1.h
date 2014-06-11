@@ -30,6 +30,7 @@
 #define FALSE 0
 */
 
+
 typedef enum {
     FALSE = 0,
     TRUE = 1
@@ -37,7 +38,11 @@ typedef enum {
 
 typedef BOOLEAN bool;
 
-typedef struct keypad_t {
+#define false FALSE
+#define true TRUE
+#define null NULL
+
+typedef struct {
     int digit;
     const char *code;
 } keypad_t;

@@ -20,11 +20,11 @@ int main(void) {
 
     int optionStats[NUM_OPTION_STATS];
 
-    char *menu = NULL;
+    char *menu = null;
     int i = 0;
     int option = 0;
-    bool passed = FALSE;
-    bool abort = FALSE;
+    bool passed = false;
+    bool abort = false;
 
     if (!allocateMemory(&menu, STRING_MAX))
         return EXIT_FAILURE;
@@ -81,7 +81,7 @@ int main(void) {
                     break;
 
                 case 7:
-                    abort = TRUE;
+                    abort = true;
                     break;
 
             }
@@ -110,8 +110,8 @@ void fibonacciNumbers(int *optionStats) {
     int num2 = FIBONACCI_NUM2;
     int sum = 0;
     float average = 0;
-    char *message = NULL;
-    char *fibMax = NULL;
+    char *message = null;
+    char *fibMax = null;
 
     if (!allocateMemory(&message, STRING_MAX_SMALL) ||
         !allocateMemory(&fibMax, STRING_MAX_SMALL)){
@@ -161,8 +161,8 @@ void fibonacciNumbers(int *optionStats) {
 void phoneNumbers(int *optionStats) {
 
     int i = 0 ;
-    char *input = NULL, *output = NULL;
-    char *message = NULL;
+    char *input = null, *output = null;
+    char *message = null;
     keypad_t *ptr, keypad[] = {
         {2, "ABC"},
         {3, "DEF"},
@@ -172,7 +172,7 @@ void phoneNumbers(int *optionStats) {
         {7, "PQRS"},
         {8, "TUV"},
         {9, "XYZ"},
-        {MAX_KEYPAD, NULL}
+        {MAX_KEYPAD, null}
     };
 
     if (!allocateMemory(&input, STRING_MAX_SMALL) ||
@@ -191,7 +191,7 @@ void phoneNumbers(int *optionStats) {
             if (isalpha(input[i])){
 
                 for (ptr = keypad; ptr->digit != MAX_KEYPAD; ++ptr){
-                    if (strchr(ptr->code, toupper(input[i])) != NULL){
+                    if (strchr(ptr->code, toupper(input[i])) != null){
                         output[i] = (char)(ptr->digit + '0');
                         break;
                     }
@@ -228,11 +228,11 @@ void firstLastStrings(int *optionStats) {
     int i = 0;
     int bufferCount = 0;
     int bufferPower = 1;
-    char *input = NULL;
-    char *message = NULL;
-    char *first = NULL;
-    char *last = NULL;
-    char *dashed = NULL;
+    char *input = null;
+    char *message = null;
+    char *first = null;
+    char *last = null;
+    char *dashed = null;
     char *buffer[STRING_MAX];
 
     if (!allocateMemory(&input, STRING_MAX_TINY) ||
@@ -247,7 +247,7 @@ void firstLastStrings(int *optionStats) {
     printf("%s\n", dashed);
     sprintf(message, "Enter word (max %d characters, enter to quit): ", STRING_MAX_TINY);
 
-    while (getStringFromStdInNS(&input, STRING_MAX_TINY, message, FALSE) && strlen(input) > 0){
+    while (getStringFromStdInNS(&input, STRING_MAX_TINY, message, false) && strlen(input) > 0){
 
         if (!allocateMemory(&buffer[bufferCount], strlen(input) + 1)){
             /*optionStats[2]--;*/
@@ -306,7 +306,7 @@ void wordStopping(int *optionStats) {
 
             char *chr = strchr(input, WORD_SEPARATOR);
 
-            if (chr == NULL){
+            if (chr == null){
 
                 fputs("You must enter at least 2 words. Try again.\n", stderr);
 
@@ -345,9 +345,9 @@ void rookAndTheBishop(int *optionStats) {
 void sessionSummary(int *optionStats) {
 
     int i = 0;
-    char *dashed = NULL;
-    char *title1 = NULL;
-    char *title2 = NULL;
+    char *dashed = null;
+    char *title1 = null;
+    char *title2 = null;
 
     if (!allocateMemory(&dashed, STRING_MAX_SMALL) ||
         !allocateMemory(&title1, STRING_MAX_SMALL) ||
@@ -390,14 +390,14 @@ bool getIntegerFromStdIn(int *result, int length, const char *message, int min,
         int max) {
 
     int i = 0;
-    char *s = NULL;
-    char *s2 = NULL;
-    char *errorMessage = NULL;
-    bool passed = FALSE;
+    char *s = null;
+    char *s2 = null;
+    char *errorMessage = null;
+    bool passed = false;
 
     if (!allocateMemory(&s, length + EXTRA_SPACES) ||
         !allocateMemory(&errorMessage, STRING_MAX_SMALL))
-        return FALSE;
+        return false;
 
     sprintf(errorMessage, "%s %d %s %d. %s",
         "You must enter a number between",
@@ -430,7 +430,7 @@ bool getIntegerFromStdIn(int *result, int length, const char *message, int min,
             } else {
 
                 *result = i;
-                passed = TRUE;
+                passed = true;
 
                 freeMemory(&s);
                 freeMemory(&errorMessage);
@@ -441,19 +441,19 @@ bool getIntegerFromStdIn(int *result, int length, const char *message, int min,
 
     } while (!passed);
 
-    return TRUE;
+    return true;
 
 }
 
 bool getStringFromStdInNS(char **result, int length, const char *message, bool showError){
 
-    char *s = NULL;
-    char *errorMessage = NULL;
-    bool passed = FALSE;
+    char *s = null;
+    char *errorMessage = null;
+    bool passed = false;
 
     if (!allocateMemory(&s, length + EXTRA_SPACES) ||
         !allocateMemory(&errorMessage, STRING_MAX_SMALL))
-        return FALSE;
+        return false;
 
     if (showError)
         sprintf(errorMessage, "Invalid entry! Try again.\n");
@@ -475,7 +475,7 @@ bool getStringFromStdInNS(char **result, int length, const char *message, bool s
             } else {
 
                 strcpy(*result, "\0");
-                passed = TRUE;
+                passed = true;
 
                 freeMemory(&s);
                 freeMemory(&errorMessage);
@@ -485,7 +485,7 @@ bool getStringFromStdInNS(char **result, int length, const char *message, bool s
 
             s[len - 1] = '\0';
             strcpy(*result, s);
-            passed = TRUE;
+            passed = true;
 
             freeMemory(&s);
             freeMemory(&errorMessage);
@@ -494,13 +494,13 @@ bool getStringFromStdInNS(char **result, int length, const char *message, bool s
 
     }
 
-    return TRUE;
+    return true;
 
 }
 
 bool getStringFromStdIn(char **result, int length, const char *message){
 
-    return getStringFromStdInNS(result, length, message, TRUE);
+    return getStringFromStdInNS(result, length, message, true);
 
 }
 
@@ -509,20 +509,20 @@ bool allocateMemory(char **memory, int size){
     if (size > 0)
         *memory = realloc(*memory, sizeof(char) * size);
 
-    if (*memory == NULL){
+    if (*memory == null){
         fputs(ERROR_MEMORY, stderr);
-        return FALSE;
+        return false;
     } else {
-        return TRUE;
+        return true;
     }
 
 }
 
 void freeMemory(char **memory){
 
-    if (*memory != NULL){
+    if (*memory != null){
         free(*memory);
-        *memory = NULL;
+        *memory = null;
     }
 
 }
@@ -541,7 +541,7 @@ char *createDashes(const char *str){
     int i = 0;
     int len = strlen(str);
     int max = (len << 1) + 2; /* including 2 \n's*/
-    char *dashes = NULL;
+    char *dashes = null;
 
     if (allocateMemory(&dashes, max + 1)){
         sprintf(dashes, "%s\n", str);
