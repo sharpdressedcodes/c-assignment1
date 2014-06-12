@@ -19,6 +19,7 @@
 int main(void) {
 
     int optionStats[NUM_OPTION_STATS];
+    /*int optionStats[trackedMethodMax] = {0};*/
 
     char *menu = null;
     int i = 0;
@@ -115,7 +116,7 @@ void fibonacciNumbers(int *optionStats) {
 
     if (!allocateMemory(&message, STRING_MAX_SMALL) ||
         !allocateMemory(&fibMax, STRING_MAX_SMALL)){
-        /*optionStats[0]--;*/
+        /*optionStats[eFibonacciSeries]--;*/
         return;
     }
 
@@ -125,7 +126,7 @@ void fibonacciNumbers(int *optionStats) {
         MAX_OPTION_FIBONACCI
     );
 
-    if (getIntegerFromStdIn(&limit, strlen(fibMax), message, MIN_OPTION_FIBONACCI, MAX_OPTION_FIBONACCI)) {
+    if (getIntegerFromStdInNS(&limit, strlen(fibMax), message, MIN_OPTION_FIBONACCI, MAX_OPTION_FIBONACCI, false)) {
 
         printf("Fibonacci sequence for %d terms:\n", limit);
 
@@ -147,6 +148,10 @@ void fibonacciNumbers(int *optionStats) {
 
         printf("\nSum: %d\n", sum);
         printf("Average: %.2f\n", average);
+
+    } else {
+
+        optionStats[eFibonacciSeries]--;
 
     }
 
@@ -178,13 +183,13 @@ void phoneNumbers(int *optionStats) {
     if (!allocateMemory(&input, STRING_MAX_SMALL) ||
         !allocateMemory(&output, STRING_MAX_SMALL) ||
         !allocateMemory(&message, STRING_MAX_SMALL)){
-        /*optionStats[1]--;*/
+        /*optionStats[ePhoneNumberConversion]--;*/
         return;
     }
 
     sprintf(message, "Enter phone number (max %d characters): ", STRING_MAX_SMALL);
 
-    if (getStringFromStdIn(&input, STRING_MAX_SMALL, message)){
+    if (getStringFromStdInNS(&input, STRING_MAX_SMALL, message, false)){
 
         for (i = 0; i < strlen(input); i++){
 
@@ -207,6 +212,10 @@ void phoneNumbers(int *optionStats) {
 
         output[i] = '\0';
         printf("%s\n", output);
+
+    } else {
+
+        optionStats[ePhoneNumberConversion]--;
 
     }
 
@@ -249,8 +258,10 @@ void firstLastStrings(int *optionStats) {
 
     while (getStringFromStdInNS(&input, STRING_MAX_TINY, message, false) && strlen(input) > 0){
 
+        buffer[bufferCount] = null;
+
         if (!allocateMemory(&buffer[bufferCount], strlen(input) + 1)){
-            /*optionStats[2]--;*/
+            /*optionStats[eFirstLastStrings]--;*/
             return;
         }
 
@@ -259,7 +270,7 @@ void firstLastStrings(int *optionStats) {
         if (bufferCount >= STRING_MAX * bufferPower){
             bufferPower++;
             if (!allocateMemory(&buffer[bufferCount], STRING_MAX * bufferPower)){
-                /*optionStats[2]--;*/
+                /*optionStats[eFirstLastStrings]--;*/
                 return;
             }
         }
@@ -272,7 +283,8 @@ void firstLastStrings(int *optionStats) {
     }
 
     if (bufferCount < MIN_OPTION_WORD_SERIES){
-        fprintf(stderr, "You must enter at least %d words. Try again.\n", MIN_OPTION_WORD_SERIES);
+        /*fprintf(stderr, "You must enter at least %d words. Try again.\n", MIN_OPTION_WORD_SERIES);*/
+        optionStats[eFirstLastStrings]--;
         return;
     }
 
@@ -359,7 +371,7 @@ void sessionSummary(int *optionStats) {
     printf("%sOption     Count\n------     -----\n", dashed);
 
     /* remove -1 from loop check is have to print session summary count */
-    for (; i < NUM_OPTION_STATS - 1; i++)
+    for (; i < trackedMethodMax; i++)
         printf("%6d     %5d\n", i + 1, optionStats[i]);
 
     freeMemory(&dashed);
@@ -385,9 +397,7 @@ void readRestOfLine() {
 
 }
 
-
-bool getIntegerFromStdIn(int *result, int length, const char *message, int min,
-        int max) {
+bool getIntegerFromStdInNS(int *result, int length, const char *message, int min, int max, bool showError){
 
     int i = 0;
     char *s = null;
@@ -399,13 +409,14 @@ bool getIntegerFromStdIn(int *result, int length, const char *message, int min,
         !allocateMemory(&errorMessage, STRING_MAX_SMALL))
         return false;
 
-    sprintf(errorMessage, "%s %d %s %d. %s",
-        "You must enter a number between",
-        min,
-        "and",
-        max,
-        "Try again.\n"
-    );
+   /* if (showError)*/
+        sprintf(errorMessage, "%s %d %s %d. %s",
+            "You must enter a number between",
+            min,
+            "and",
+            max,
+            "Try again.\n"
+        );
 
     do {
 
@@ -424,8 +435,21 @@ bool getIntegerFromStdIn(int *result, int length, const char *message, int min,
 
             if (strcmp(s2, "") != 0 || i < min || i > max) {
 
-                fputs(errorMessage, stderr);
-                /* readRestOfLine ? */
+                if (showError){
+
+                    fputs(errorMessage, stderr);
+                    /* readRestOfLine ? */
+
+                } else {
+
+                    *result = 0;
+                    /*passed = true;*/
+
+                    freeMemory(&s);
+                    freeMemory(&errorMessage);
+                    return false;
+
+                }
 
             } else {
 
@@ -442,6 +466,12 @@ bool getIntegerFromStdIn(int *result, int length, const char *message, int min,
     } while (!passed);
 
     return true;
+
+}
+
+bool getIntegerFromStdIn(int *result, int length, const char *message, int min, int max) {
+
+    return getIntegerFromStdInNS(result, length, message, min, max, true);
 
 }
 
@@ -475,10 +505,13 @@ bool getStringFromStdInNS(char **result, int length, const char *message, bool s
             } else {
 
                 strcpy(*result, "\0");
-                passed = true;
+                /*passed = true;*/
 
                 freeMemory(&s);
                 freeMemory(&errorMessage);
+
+                return false;
+
             }
 
         } else {

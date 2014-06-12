@@ -1,8 +1,8 @@
 /****************************************************************************
 * COSC2138 / CPT220- Assignment #1
 * Programming Principles 2A/Programming Techniques
-* Author           : <insert name here>
-* Student Number   : <insert student number here>
+* Author           : Greg KappatosGreg Kappatos
+* Student Number   : s3460969
 * Start up code provided by the C-Teach team
 ****************************************************************************/
 
@@ -30,6 +30,16 @@
 #define FALSE 0
 */
 
+typedef enum {
+    eFibonacciSeries = 0,
+    ePhoneNumberConversion = 1,
+    eFirstLastStrings = 2,
+    eWordStopping = 3,
+    eRookAndBishop = 4,
+    trackedMethodMax = 5
+    /*,
+    eSessionSummary = 5*/
+} trackedMethod;
 
 typedef enum {
     FALSE = 0,
@@ -72,6 +82,7 @@ void rookAndTheBishop(int *);
 void sessionSummary(int *optionStats);
 void readRestOfLine();
 
+bool getIntegerFromStdInNS(int *result, int length, const char *message, int min, int max, bool showError);
 bool getIntegerFromStdIn(int *result, int length, const char *message, int min, int max);
 bool getStringFromStdInNS(char **result, int length, const char *message, bool showError);
 bool getStringFromStdIn(char **result, int length, const char *message); /* NS for not silent*/

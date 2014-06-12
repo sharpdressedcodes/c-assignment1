@@ -1,8 +1,8 @@
 /****************************************************************************
 * COSC2138/CPT 220 - Programming Principles 2A
 * Study Period 2  2014 Assignment #1 - Different Applications
-* Full Name        : EDIT HERE
-* Student Number   : EDIT HERE
+* Full Name        : Greg Kappatos
+* Student Number   : s3460969
 * Start up code provided by the CTeach Team
 ****************************************************************************/
 
@@ -11,7 +11,7 @@ If selected, do you grant permission for your assignment to be released as an
 anonymous student sample solution?
 -----------------------------------------------------------------------------
 
-Yes/No
+Yes/No - N
 
 -----------------------------------------------------------------------------
 Documentation of my implemented requirements:
@@ -26,7 +26,7 @@ Requirement  6 - Rook and the Bishop                        : Yes/No
 Requirement  7 - Session Summary                            : Yes/No
 Requirement  8 - Exit                                       : Yes/No
 Requirement  9 - Return to Menu Functionality               : Yes/No
-Requirement 10 - Functional Abstraction                     :               Yes/No
+Requirement 10 - Functional Abstraction                     : Yes/No
 Requirement 10 - Buffer handling                            : Yes/No
 Requirement 11 - Input validation                           : Yes/No
 Requirement 12 - Coding conventions                         : Yes/No
@@ -48,8 +48,26 @@ None/EDIT HERE
 Any other notes for the marker:
 -----------------------------------------------------------------------------
 
-None/EDIT HERE
+I changed the Boolean constants. I know it said not to modify the startup code
+but I did it for the better! I could have just left it as it was, and used:
+
+typedef enum {
+	false = FALSE,
+	true = TRUE
+};
+
+but I think my solution is more elegant. I have also used dynamic memory
+because I wanted to learn it. In regards to the "word Series" requirement,
+the limit is almost unlimited in the sense that it should keep adding
+words until the user runs out of memory.
 
 -------------------------------------------------------------------------------------
-IDE used - comments on its use when transferred to the Linux core teaching machines.
+IDE used - comments on its use when transferred to the Linux core teaching 
+machines.
 --------------------------------------------------------------------------------------
+
+OS: Ubuntu 14.04
+IDE: Standard one in the terminal, Nano, and Eclipse.
+
+I usually use Windows, but have chosen to do this subject in Linux to make things
+easier (also so I can learn).
