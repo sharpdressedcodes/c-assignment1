@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Custom Header files. */
 #include <strings.h>
 #include <ctype.h>
 
@@ -30,6 +31,7 @@
 #define FALSE 0
 */
 
+/* Custom Constants + Definitions. */
 typedef enum {
     eFibonacciSeries = 0,
     ePhoneNumberConversion = 1,
@@ -46,22 +48,28 @@ typedef enum {
     TRUE = 1
 } BOOLEAN;
 
+typedef struct {
+    int digit;
+    const char *code;
+} keypad_t;
+
 typedef BOOLEAN bool;
 
 #define false FALSE
 #define true TRUE
 #define null NULL
 
-typedef struct {
-    int digit;
-    const char *code;
-} keypad_t;
+/* used when using 1 based index instead of usual 0 based */
+#define BASE1 1
+#define BASE10 10
+
+#define START_POWER 1
 
 #define MAX_KEYPAD 10
 
-#define STRING_MAX_TINY 20
-#define STRING_MAX_SMALL 256
-#define STRING_MAX 1024
+#define STRING_MAX_SMALL 20
+#define STRING_MAX_MEDIUM 256
+#define STRING_MAX_LARGE 1024
 
 #define ERROR_MEMORY "Error: memory allocation failed.\n"
 #define MIN_OPTION_FIBONACCI 1
@@ -72,6 +80,8 @@ typedef struct {
 #define WORD_SEPARATOR ' '
 #define MIN_OPTION_WORD_SERIES 3
 #define MIN_OPTION_WORD_STOPPER 3
+/* string\nstring\n\0 */
+#define DASH_EXTRA_SPACES 3
 
 /* Function prototypes. */
 void fibonacciNumbers(int *);
@@ -83,10 +93,9 @@ void rookAndTheBishop(int *);
 void sessionSummary(int *optionStats);
 void readRestOfLine();
 
+/* Custom function prototypes. */
 bool getIntegerFromStdIn(int *result, int length, const char *message, int min, int max, bool showError);
-/*bool getIntegerFromStdInE(int *result, int length, const char *message, int min, int max);*/
 bool getStringFromStdIn(char **result, int length, const char *message, bool showError);
-/*bool getStringFromStdInE(char **result, int length, const char *message);*/
 bool allocateMemory(char **memory, int size);
 void freeMemory(char **memory);
 int wordSeriesSortCallback(const void *a, const void *b);

@@ -21,13 +21,12 @@ int main(void) {
     int optionStats[NUM_OPTION_STATS];
     /*int optionStats[trackedMethodMax] = {0};*/
 
-    char *menu = null;
     int i = 0;
     int option = 0;
-    bool passed = false;
+    char *menu = null;
     bool abort = false;
 
-    if (!allocateMemory(&menu, STRING_MAX))
+    if (!allocateMemory(&menu, STRING_MAX_LARGE))
         return EXIT_FAILURE;
 
     for (i = 0; i < NUM_OPTION_STATS; i++)
@@ -47,14 +46,8 @@ int main(void) {
 
     while (!abort) {
 
-        passed = getIntegerFromStdIn(&option, MAX_OPTION_INPUT, menu, 1, NUM_OPTION_STATS + 1, true);
-
-        if (passed) {
-
-            /* change to if (option -1 < NUM_OPTION_STATS) if have to count session summary */
-            if (option < NUM_OPTION_STATS)
-                optionStats[option - 1]++;
-
+        /* NUM_OPTION_STATS + 1 to count the exit option. */
+        if (getIntegerFromStdIn(&option, MAX_OPTION_INPUT, menu, BASE1, NUM_OPTION_STATS + 1, true)) {
             switch (option) {
 
                 case 1:
@@ -86,7 +79,6 @@ int main(void) {
                     break;
 
             }
-
         }
 
     }
@@ -114,9 +106,8 @@ void fibonacciNumbers(int *optionStats) {
     char *message = null;
     char *fibMax = null;
 
-    if (!allocateMemory(&message, STRING_MAX_SMALL) ||
-        !allocateMemory(&fibMax, STRING_MAX_SMALL)){
-        /*optionStats[eFibonacciSeries]--;*/
+    if (!allocateMemory(&message, STRING_MAX_MEDIUM) ||
+        !allocateMemory(&fibMax, STRING_MAX_MEDIUM)){
         return;
     }
 
@@ -132,9 +123,9 @@ void fibonacciNumbers(int *optionStats) {
 
         for (i = 0; i < limit; i++) {
 
-            int fibonacci = i < 2 ? i : num1 + num2;
+            int fibonacci = i <= FIBONACCI_NUM2 ? i : num1 + num2;
 
-            if (i > 1) {
+            if (i > FIBONACCI_NUM2) {
                 num1 = num2;
                 num2 = fibonacci;
             }
@@ -149,9 +140,7 @@ void fibonacciNumbers(int *optionStats) {
         printf("\nSum: %d\n", sum);
         printf("Average: %.2f\n", average);
 
-    } else {
-
-        optionStats[eFibonacciSeries]--;
+        optionStats[eFibonacciSeries]++;
 
     }
 
@@ -166,7 +155,8 @@ void fibonacciNumbers(int *optionStats) {
 void phoneNumbers(int *optionStats) {
 
     int i = 0 ;
-    char *input = null, *output = null;
+    char *input = null;
+    char *output = null;
     char *message = null;
     keypad_t *ptr, keypad[] = {
         {2, "ABC"},
@@ -180,26 +170,27 @@ void phoneNumbers(int *optionStats) {
         {MAX_KEYPAD, null}
     };
 
-    if (!allocateMemory(&input, STRING_MAX_SMALL) ||
-        !allocateMemory(&output, STRING_MAX_SMALL) ||
-        !allocateMemory(&message, STRING_MAX_SMALL)){
-        /*optionStats[ePhoneNumberConversion]--;*/
+    if (!allocateMemory(&input, STRING_MAX_MEDIUM) ||
+        !allocateMemory(&output, STRING_MAX_MEDIUM) ||
+        !allocateMemory(&message, STRING_MAX_MEDIUM)){
         return;
     }
 
-    sprintf(message, "Enter phone number (max %d characters): ", STRING_MAX_SMALL);
+    sprintf(message, "Enter phone number (max %d characters): ", STRING_MAX_MEDIUM);
 
-    if (getStringFromStdIn(&input, STRING_MAX_SMALL, message, false)){
+    if (getStringFromStdIn(&input, STRING_MAX_MEDIUM, message, false)){
 
         for (i = 0; i < strlen(input); i++){
 
             if (isalpha(input[i])){
 
                 for (ptr = keypad; ptr->digit != MAX_KEYPAD; ++ptr){
+
                     if (strchr(ptr->code, toupper(input[i])) != null){
                         output[i] = (char)(ptr->digit + '0');
                         break;
                     }
+
                 }
 
             } else {
@@ -213,9 +204,7 @@ void phoneNumbers(int *optionStats) {
         output[i] = '\0';
         printf("%s\n", output);
 
-    } else {
-
-        optionStats[ePhoneNumberConversion]--;
+        optionStats[ePhoneNumberConversion]++;
 
     }
 
@@ -236,70 +225,53 @@ void firstLastStrings(int *optionStats) {
 
     int i = 0;
     int bufferCount = 0;
-    int bufferPower = 1;
+    int bufferPower = START_POWER;
     char *input = null;
     char *message = null;
-    char *first = null;
-    char *last = null;
-    char *dashed = null;
-    char *buffer[STRING_MAX];
+    char *dashed = createDashes("Finding strings");
+    char *buffer[STRING_MAX_LARGE];
 
-    if (!allocateMemory(&input, STRING_MAX_TINY) ||
-        !allocateMemory(&message, STRING_MAX_SMALL) ||
-        !allocateMemory(&first, STRING_MAX_TINY) ||
-        !allocateMemory(&last, STRING_MAX_TINY)){
-        /*optionStats[2]--;*/
+    if (!allocateMemory(&input, STRING_MAX_SMALL) ||
+        !allocateMemory(&message, STRING_MAX_MEDIUM)){
         return;
     }
 
-    dashed = createDashes("Finding strings");
     printf("%s\n", dashed);
-    sprintf(message, "Enter word (max %d characters, enter to quit): ", STRING_MAX_TINY);
+    sprintf(message, "Enter word (max %d characters, enter to quit): ", STRING_MAX_SMALL);
 
-    while (getStringFromStdIn(&input, STRING_MAX_TINY, message, false) && strlen(input) > 0){
+    while (getStringFromStdIn(&input, STRING_MAX_SMALL, message, false) && strlen(input) > 0){
 
         buffer[bufferCount] = null;
 
-        if (!allocateMemory(&buffer[bufferCount], strlen(input) + 1)){
-            /*optionStats[eFirstLastStrings]--;*/
+        if (!allocateMemory(&buffer[bufferCount], strlen(input) + 1))
             return;
-        }
 
         strcpy(buffer[bufferCount], input);
 
-        if (bufferCount >= STRING_MAX * bufferPower){
-            bufferPower++;
-            if (!allocateMemory(&buffer[bufferCount], STRING_MAX * bufferPower)){
-                /*optionStats[eFirstLastStrings]--;*/
+        if (bufferCount >= STRING_MAX_LARGE * bufferPower){
+
+            if (!allocateMemory(&buffer[bufferCount], STRING_MAX_LARGE * ++bufferPower))
                 return;
-            }
+
         }
 
-        freeMemory(&input);
-        allocateMemory(&input, STRING_MAX_TINY);
-
+        memset(input, 0, sizeof(char) * STRING_MAX_SMALL);
         bufferCount++;
 
     }
 
-    if (bufferCount < MIN_OPTION_WORD_SERIES){
-        /*fprintf(stderr, "You must enter at least %d words. Try again.\n", MIN_OPTION_WORD_SERIES);*/
-        optionStats[eFirstLastStrings]--;
+    if (bufferCount < MIN_OPTION_WORD_SERIES)
         return;
-    }
 
     qsort(buffer, bufferCount, sizeof(char*), wordSeriesSortCallback);
 
-    strcpy(first, buffer[0]);
-    strcpy(last, buffer[bufferCount - 1]);
+    printf("Smallest word: %s\n", buffer[0]);
+    printf("Largest word: %s\n", buffer[bufferCount - 1]);
 
-    printf("Smallest word: %s\n", first);
-    printf("Largest word: %s\n", last);
+    optionStats[eFirstLastStrings]++;
 
     freeMemory(&input);
     freeMemory(&message);
-    freeMemory(&first);
-    freeMemory(&last);
     freeMemory(&dashed);
 
     for (i = 0; i < bufferCount; i++)
@@ -326,16 +298,15 @@ void wordStopping(int *optionStats) {
         '\0'
     };
 
-    if (!allocateMemory(&input, STRING_MAX_TINY) ||
-        !allocateMemory(&buffer, STRING_MAX_TINY) ||
-        !allocateMemory(&message, STRING_MAX_SMALL)){
-        /*optionStats[eWordStopping]--;*/
+    if (!allocateMemory(&input, STRING_MAX_SMALL) ||
+        !allocateMemory(&buffer, STRING_MAX_SMALL) ||
+        !allocateMemory(&message, STRING_MAX_MEDIUM)){
         return;
     }
 
-    sprintf(message, "Enter a string (1-%d characters): ", STRING_MAX_TINY);
+    sprintf(message, "Enter a string (%d-%d characters): ", BASE1, STRING_MAX_SMALL);
 
-    if (getStringFromStdIn(&input, STRING_MAX_TINY, message, false)){
+    if (getStringFromStdIn(&input, STRING_MAX_SMALL, message, false)){
 
         chr = strtok(input, delim);
 
@@ -369,10 +340,7 @@ void wordStopping(int *optionStats) {
         }
 
         printf("\nStopped string: %s\n", buffer);
-
-    } else {
-
-        optionStats[eWordStopping]--;
+        optionStats[eWordStopping]++;
 
     }
 
@@ -395,27 +363,42 @@ void rookAndTheBishop(int *optionStats) {
  */
 void sessionSummary(int *optionStats) {
 
+    char *title = "Session summary";
+    char *option = "Option";
+    char *count = "Count";
+    char *dashed = createDashes(title);
+    char *spaces = null;
+    char *optionDashes = null;
+    char *countDashes = null;
     int i = 0;
-    char *dashed = null;
-    char *title1 = null;
-    char *title2 = null;
+    int spaceLength = strlen(title) - strlen(option) - strlen(count);
 
-    if (!allocateMemory(&dashed, STRING_MAX_SMALL) ||
-        !allocateMemory(&title1, STRING_MAX_SMALL) ||
-        !allocateMemory(&title2, STRING_MAX_SMALL)){
+    if (!allocateMemory(&spaces, spaceLength + 1) ||
+        !allocateMemory(&optionDashes, strlen(option) + 1) ||
+        !allocateMemory(&countDashes, strlen(count) + 1))
         return;
-    }
 
-    dashed = createDashes("Session summary");
-    printf("%sOption     Count\n------     -----\n", dashed);
+    memset(spaces, ' ', spaceLength);
+    memset(optionDashes, '-', strlen(option));
+    memset(countDashes, '-', strlen(count));
 
-    /* remove -1 from loop check is have to print session summary count */
+    printf("%s%s%s%s\n%s%s%s\n",
+        dashed,
+        option,
+        spaces,
+        count,
+        optionDashes,
+        spaces,
+        countDashes
+    );
+
     for (; i < trackedMethodMax; i++)
-        printf("%6d     %5d\n", i + 1, optionStats[i]);
+        printf("%6d%s%5d\n", i + 1, spaces, optionStats[i]);
 
     freeMemory(&dashed);
-    freeMemory(&title1);
-    freeMemory(&title2);
+    freeMemory(&spaces);
+    freeMemory(&optionDashes);
+    freeMemory(&countDashes);
 
 }
 
@@ -445,19 +428,18 @@ bool getIntegerFromStdIn(int *result, int length, const char *message, int min, 
     bool passed = false;
 
     if (!allocateMemory(&s, length + EXTRA_SPACES) ||
-        !allocateMemory(&errorMessage, STRING_MAX_SMALL))
+        !allocateMemory(&errorMessage, STRING_MAX_MEDIUM))
         return false;
 
-   /* if (showError)*/
-        sprintf(errorMessage, "%s %d %s %d. %s",
-            "You must enter a number between",
-            min,
-            "and",
-            max,
-            "Try again.\n"
-        );
+    sprintf(errorMessage, "%s %d %s %d. %s",
+        "You must enter a number between",
+        min,
+        "and",
+        max,
+        "Try again.\n"
+    );
 
-    do {
+    while (!passed) {
 
         fputs(message, stdout);
         fgets(s, length + EXTRA_SPACES, stdin);
@@ -470,14 +452,13 @@ bool getIntegerFromStdIn(int *result, int length, const char *message, int min, 
         } else {
 
             s[strlen(s) - 1] = '\0';
-            i = (int) strtol(s, &s2, 10);
+            i = (int) strtol(s, &s2, BASE10);
 
             if (strcmp(s2, "") != 0 || i < min || i > max) {
 
                 if (showError){
 
                     fputs(errorMessage, stderr);
-                    /* readRestOfLine ? */
 
                 } else {
 
@@ -502,17 +483,11 @@ bool getIntegerFromStdIn(int *result, int length, const char *message, int min, 
 
         }
 
-    } while (!passed);
+    }
 
     return true;
 
 }
-
-/*bool getIntegerFromStdInE(int *result, int length, const char *message, int min, int max) {
-
-    return getIntegerFromStdIn(result, length, message, min, max, true);
-
-}*/
 
 bool getStringFromStdIn(char **result, int length, const char *message, bool showError){
 
@@ -521,7 +496,7 @@ bool getStringFromStdIn(char **result, int length, const char *message, bool sho
     bool passed = false;
 
     if (!allocateMemory(&s, length + EXTRA_SPACES) ||
-        !allocateMemory(&errorMessage, STRING_MAX_SMALL))
+        !allocateMemory(&errorMessage, STRING_MAX_MEDIUM))
         return false;
 
     if (showError)
@@ -539,8 +514,9 @@ bool getStringFromStdIn(char **result, int length, const char *message, bool sho
         if (len < EXTRA_SPACES || s[len - 1] != '\n') {
 
             if (showError){
+
                 fputs(errorMessage, stderr);
-                /*readRestOfLine();*/
+
             } else {
 
                 strcpy(*result, "\0");
@@ -570,35 +546,40 @@ bool getStringFromStdIn(char **result, int length, const char *message, bool sho
 
 }
 
-/*bool getStringFromStdInE(char **result, int length, const char *message){
-
-    return getStringFromStdIn(result, length, message, true);
-
-}*/
-
 bool allocateMemory(char **memory, int size){
 
-    size_t sz = sizeof(char) * size;
+    bool result = false;
+    size_t newSize = sizeof(char) * size;
+    size_t oldSize = *memory == null ? 0 : sizeof(char) * strlen(*memory);
 
-    if (sz > 0)
-        /**memory = realloc(*memory, sizeof(char) * size);*/
-        *memory = malloc(sz);
+    if (newSize > 0){
 
-    if (*memory == null){
-        fputs(ERROR_MEMORY, stderr);
-        return false;
-    } else {
-        memset(*memory, 0, sz);
-        return true;
+        *memory = realloc(*memory, newSize);
+
+        if (*memory == null){
+
+            fputs(ERROR_MEMORY, stderr);
+
+        } else {
+
+            memset(*memory + oldSize, 0, newSize - oldSize);
+            result = true;
+
+        }
+
     }
+
+    return result;
 
 }
 
 void freeMemory(char **memory){
 
     if (*memory != null){
+
         free(*memory);
         *memory = null;
+
     }
 
 }
@@ -614,44 +595,19 @@ int wordSeriesSortCallback(const void *a, const void *b){
 
 char *createDashes(const char *str){
 
-    int i = 0;
     int len = strlen(str);
-    int max = (len << 1) + 2; /* including 2 \n's*/
+    int max = (len << 1) + DASH_EXTRA_SPACES; /* including 2 \n's and \0*/
     char *dashes = null;
 
-    if (allocateMemory(&dashes, max + 1)){
+    if (allocateMemory(&dashes, max)){
+
         sprintf(dashes, "%s\n", str);
-        for (i = len + 1; i < max - 1; i++)
-            dashes[i] = '-';
-        dashes[i++] = '\n';
-        dashes[i] = '\0';
+        memset(dashes + (sizeof(char) * strlen(dashes)), '-', len);
+        strcat(dashes, "\n");
+
     }
 
     return dashes;
 
 }
 
-/*int getArrayIndex(char *array[], int length, char *search){
-
-    int pos = 0;
-    int start = 0;
-    int finish = length - 1;
-    int comparison = 0;
-
-    while (start <= finish){
-
-        pos = (start + finish) >> 1;
-        comparison = strcmp(array[pos], search);
-
-        if (comparison == 0)
-            return pos;
-        else if (comparison < 0)
-            start = pos + 1;
-        else
-            finish = pos - 1;
-
-    }
-
-    return -1;
-
-}*/
