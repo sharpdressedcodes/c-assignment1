@@ -71,6 +71,7 @@ typedef struct {
 
 #define WORD_SEPARATOR ' '
 #define MIN_OPTION_WORD_SERIES 3
+#define MIN_OPTION_WORD_STOPPER 3
 
 /* Function prototypes. */
 void fibonacciNumbers(int *);
@@ -82,10 +83,10 @@ void rookAndTheBishop(int *);
 void sessionSummary(int *optionStats);
 void readRestOfLine();
 
-bool getIntegerFromStdInNS(int *result, int length, const char *message, int min, int max, bool showError);
-bool getIntegerFromStdIn(int *result, int length, const char *message, int min, int max);
-bool getStringFromStdInNS(char **result, int length, const char *message, bool showError);
-bool getStringFromStdIn(char **result, int length, const char *message); /* NS for not silent*/
+bool getIntegerFromStdIn(int *result, int length, const char *message, int min, int max, bool showError);
+/*bool getIntegerFromStdInE(int *result, int length, const char *message, int min, int max);*/
+bool getStringFromStdIn(char **result, int length, const char *message, bool showError);
+/*bool getStringFromStdInE(char **result, int length, const char *message);*/
 bool allocateMemory(char **memory, int size);
 void freeMemory(char **memory);
 int wordSeriesSortCallback(const void *a, const void *b);

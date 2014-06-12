@@ -47,7 +47,7 @@ int main(void) {
 
     while (!abort) {
 
-        passed = getIntegerFromStdIn(&option, MAX_OPTION_INPUT, menu, 1, NUM_OPTION_STATS + 1);
+        passed = getIntegerFromStdIn(&option, MAX_OPTION_INPUT, menu, 1, NUM_OPTION_STATS + 1, true);
 
         if (passed) {
 
@@ -126,7 +126,7 @@ void fibonacciNumbers(int *optionStats) {
         MAX_OPTION_FIBONACCI
     );
 
-    if (getIntegerFromStdInNS(&limit, strlen(fibMax), message, MIN_OPTION_FIBONACCI, MAX_OPTION_FIBONACCI, false)) {
+    if (getIntegerFromStdIn(&limit, strlen(fibMax), message, MIN_OPTION_FIBONACCI, MAX_OPTION_FIBONACCI, false)) {
 
         printf("Fibonacci sequence for %d terms:\n", limit);
 
@@ -189,7 +189,7 @@ void phoneNumbers(int *optionStats) {
 
     sprintf(message, "Enter phone number (max %d characters): ", STRING_MAX_SMALL);
 
-    if (getStringFromStdInNS(&input, STRING_MAX_SMALL, message, false)){
+    if (getStringFromStdIn(&input, STRING_MAX_SMALL, message, false)){
 
         for (i = 0; i < strlen(input); i++){
 
@@ -256,7 +256,7 @@ void firstLastStrings(int *optionStats) {
     printf("%s\n", dashed);
     sprintf(message, "Enter word (max %d characters, enter to quit): ", STRING_MAX_TINY);
 
-    while (getStringFromStdInNS(&input, STRING_MAX_TINY, message, false) && strlen(input) > 0){
+    while (getStringFromStdIn(&input, STRING_MAX_TINY, message, false) && strlen(input) > 0){
 
         buffer[bufferCount] = null;
 
@@ -308,38 +308,77 @@ void firstLastStrings(int *optionStats) {
 }
 
 /*
- * Function substrings() Many search engines (such as Google), implement "stopping" so that commonly occurring query words are ignored for the purposes of ranking query results. In this option, you will need to prompt the user for a string of 1-20 characters. You will need to output the string with all words of length 1-3 characters "stopped".
+ * Function substrings() Many search engines (such as Google), implement "stopping" so that
+ * commonly occurring query words are ignored for the purposes of ranking query results.
+ * In this option, you will need to prompt the user for a string of 1-20 characters.
+ * You will need to output the string with all words of length 1-3 characters "stopped".
  This is menu option number 4
  */
 
 void wordStopping(int *optionStats) {
 
-    /*if (getStringFromStdIn(&input, STRING_MAX_TINY, message)){
+    char *chr = null;
+    char *input = null;
+    char *message = null;
+    char *buffer = null;
+    char delim[] = {
+        WORD_SEPARATOR,
+        '\0'
+    };
 
-            char *chr = strchr(input, WORD_SEPARATOR);
+    if (!allocateMemory(&input, STRING_MAX_TINY) ||
+        !allocateMemory(&buffer, STRING_MAX_TINY) ||
+        !allocateMemory(&message, STRING_MAX_SMALL)){
+        /*optionStats[eWordStopping]--;*/
+        return;
+    }
 
-            if (chr == null){
+    sprintf(message, "Enter a string (1-%d characters): ", STRING_MAX_TINY);
 
-                fputs("You must enter at least 2 words. Try again.\n", stderr);
+    if (getStringFromStdIn(&input, STRING_MAX_TINY, message, false)){
 
-            } else {
+        chr = strtok(input, delim);
 
-                int i, pos = chr - input + 1;
+        if (chr == null){
 
-                for (i = 0; i < pos; i++)
-                    first[i] = input[i];
+            strcpy(buffer, input);
 
-                chr = strrchr(input, WORD_SEPARATOR);
-                pos = chr - input + 1;
+        } else {
 
-                for (i = pos; i < strlen(input); i++)
-                    last[i] = input[i];
+            while (chr != null){
 
+                if (strlen(chr) > MIN_OPTION_WORD_STOPPER){
 
+                    if (strlen(buffer) == 0){
+
+                        strcpy(buffer, chr);
+
+                    } else {
+
+                        strcat(buffer, delim);
+                        strcat(buffer, chr);
+
+                    }
+
+                }
+
+                chr = strtok(null, delim);
 
             }
 
-        }*/
+        }
+
+        printf("\nStopped string: %s\n", buffer);
+
+    } else {
+
+        optionStats[eWordStopping]--;
+
+    }
+
+    freeMemory(&input);
+    freeMemory(&message);
+    freeMemory(&buffer);
 
 }
 
@@ -397,7 +436,7 @@ void readRestOfLine() {
 
 }
 
-bool getIntegerFromStdInNS(int *result, int length, const char *message, int min, int max, bool showError){
+bool getIntegerFromStdIn(int *result, int length, const char *message, int min, int max, bool showError){
 
     int i = 0;
     char *s = null;
@@ -469,13 +508,13 @@ bool getIntegerFromStdInNS(int *result, int length, const char *message, int min
 
 }
 
-bool getIntegerFromStdIn(int *result, int length, const char *message, int min, int max) {
+/*bool getIntegerFromStdInE(int *result, int length, const char *message, int min, int max) {
 
-    return getIntegerFromStdInNS(result, length, message, min, max, true);
+    return getIntegerFromStdIn(result, length, message, min, max, true);
 
-}
+}*/
 
-bool getStringFromStdInNS(char **result, int length, const char *message, bool showError){
+bool getStringFromStdIn(char **result, int length, const char *message, bool showError){
 
     char *s = null;
     char *errorMessage = null;
@@ -531,21 +570,25 @@ bool getStringFromStdInNS(char **result, int length, const char *message, bool s
 
 }
 
-bool getStringFromStdIn(char **result, int length, const char *message){
+/*bool getStringFromStdInE(char **result, int length, const char *message){
 
-    return getStringFromStdInNS(result, length, message, true);
+    return getStringFromStdIn(result, length, message, true);
 
-}
+}*/
 
 bool allocateMemory(char **memory, int size){
 
-    if (size > 0)
-        *memory = realloc(*memory, sizeof(char) * size);
+    size_t sz = sizeof(char) * size;
+
+    if (sz > 0)
+        /**memory = realloc(*memory, sizeof(char) * size);*/
+        *memory = malloc(sz);
 
     if (*memory == null){
         fputs(ERROR_MEMORY, stderr);
         return false;
     } else {
+        memset(*memory, 0, sz);
         return true;
     }
 
