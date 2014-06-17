@@ -26,7 +26,7 @@ int main(void) {
     char *menu = null;
     bool abort = false;
 
-    if (!allocateMemory(&menu, STRING_MAX_LARGE))
+    if (!allocateString(&menu, STRING_MAX_LARGE))
         return EXIT_FAILURE;
 
     for (i = 0; i < NUM_OPTION_STATS; i++)
@@ -47,7 +47,7 @@ int main(void) {
     while (!abort) {
 
         /* NUM_OPTION_STATS + 1 to count the exit option. */
-        if (getIntegerFromStdIn(&option, MAX_OPTION_INPUT, menu, BASE1, NUM_OPTION_STATS + 1, true)) {
+        if (getIntegerFromStdIn(&option, MAX_OPTION_INPUT, menu, BASE1, NUM_OPTION_STATS + 1, true, false)) {
             switch (option) {
 
                 case 1:
@@ -83,7 +83,7 @@ int main(void) {
 
     }
 
-    freeMemory(&menu);
+    freeString(&menu);
 
     return EXIT_SUCCESS;
 
@@ -106,8 +106,9 @@ void fibonacciNumbers(int *optionStats) {
     char *message = null;
     char *fibMax = null;
 
-    if (!allocateMemory(&message, STRING_MAX_MEDIUM) ||
-        !allocateMemory(&fibMax, STRING_MAX_MEDIUM)){
+    if (!allocateString(&message, STRING_MAX_MEDIUM) ||
+        !allocateString(&fibMax, STRING_MAX_MEDIUM)){
+        freeStrings(2, &message, &fibMax);
         return;
     }
 
@@ -117,7 +118,7 @@ void fibonacciNumbers(int *optionStats) {
         MAX_OPTION_FIBONACCI
     );
 
-    if (getIntegerFromStdIn(&limit, strlen(fibMax), message, MIN_OPTION_FIBONACCI, MAX_OPTION_FIBONACCI, false)) {
+    if (getIntegerFromStdIn(&limit, strlen(fibMax), message, MIN_OPTION_FIBONACCI, MAX_OPTION_FIBONACCI, false, true)) {
 
         printf("Fibonacci sequence for %d terms:\n", limit);
 
@@ -144,8 +145,7 @@ void fibonacciNumbers(int *optionStats) {
 
     }
 
-    freeMemory(&message);
-    freeMemory(&fibMax);
+    freeStrings(2, &message, &fibMax);
 
 }
 
@@ -164,21 +164,22 @@ void phoneNumbers(int *optionStats) {
         {4, "GHI"},
         {5, "JKL"},
         {6, "MNO"},
-        {7, "PQRS"},
+        {7, "PQRS"}, /* added Q */
         {8, "TUV"},
-        {9, "XYZ"},
+        {9, "WXYZ"}, /* added W */
         {MAX_KEYPAD, null}
     };
 
-    if (!allocateMemory(&input, STRING_MAX_MEDIUM) ||
-        !allocateMemory(&output, STRING_MAX_MEDIUM) ||
-        !allocateMemory(&message, STRING_MAX_MEDIUM)){
+    if (!allocateString(&input, STRING_MAX_MEDIUM) ||
+        !allocateString(&output, STRING_MAX_MEDIUM) ||
+        !allocateString(&message, STRING_MAX_MEDIUM)){
+        freeStrings(3, &input, &output, &message);
         return;
     }
 
     sprintf(message, "Enter phone number (max %d characters): ", STRING_MAX_MEDIUM);
 
-    if (getStringFromStdIn(&input, STRING_MAX_MEDIUM, message, false)){
+    if (getStringFromStdIn(&input, STRING_MAX_MEDIUM, message, STRING_MIN_NONE, true) && strlen(input) > 0){
 
         for (i = 0; i < strlen(input); i++){
 
@@ -208,9 +209,7 @@ void phoneNumbers(int *optionStats) {
 
     }
 
-    freeMemory(&input);
-    freeMemory(&output);
-    freeMemory(&message);
+    freeStrings(3, &input, &output, &message);
 
 }
 
@@ -223,59 +222,96 @@ void phoneNumbers(int *optionStats) {
 
 void firstLastStrings(int *optionStats) {
 
-    int i = 0;
     int bufferCount = 0;
     int bufferPower = START_POWER;
     char *input = null;
     char *message = null;
     char *dashed = createDashes("Finding strings");
     char *buffer[STRING_MAX_LARGE];
+    bool passed = false;
 
-    if (!allocateMemory(&input, STRING_MAX_SMALL) ||
-        !allocateMemory(&message, STRING_MAX_MEDIUM)){
+    if (!allocateString(&input, STRING_MAX_SMALL) ||
+        !allocateString(&message, STRING_MAX_MEDIUM)){
+        freeStrings(3, &input, &message, &dashed);
         return;
     }
 
     printf("%s\n", dashed);
-    sprintf(message, "Enter word (max %d characters, enter to quit): ", STRING_MAX_SMALL);
+    sprintf(message, "Enter word (%d-%d characters, %c to finish): ", STRING_MIN, STRING_MAX_SMALL, FIRST_LAST_FINISH_CHAR);
 
-    while (getStringFromStdIn(&input, STRING_MAX_SMALL, message, false) && strlen(input) > 0){
+    while (!passed){
 
-        buffer[bufferCount] = null;
+        if (!getStringFromStdIn(&input, STRING_MAX_SMALL, message, STRING_MIN_NONE, true)){
 
-        if (!allocateMemory(&buffer[bufferCount], strlen(input) + 1))
-            return;
-
-        strcpy(buffer[bufferCount], input);
-
-        if (bufferCount >= STRING_MAX_LARGE * bufferPower){
-
-            if (!allocateMemory(&buffer[bufferCount], STRING_MAX_LARGE * ++bufferPower))
+            /*if (strlen(input) == STRING_MIN_NONE){
+                freeStrings(3, &input, &message, &dashed);
+                freeStringArray(buffer, bufferCount);
                 return;
+            }*/
+
+        } else {
+
+            if (strlen(input) == STRING_MIN_NONE){
+                freeStrings(3, &input, &message, &dashed);
+                freeStringArray(buffer, bufferCount);
+                return;
+            }
+
+            else if (strlen(input) == STRING_MIN && tolower(input[0]) == FIRST_LAST_FINISH_CHAR){
+
+                if (bufferCount < MIN_OPTION_WORD_SERIES){
+
+                    fprintf(stderr, "You must enter at least %d words\n", MIN_OPTION_WORD_SERIES);
+
+                } else {
+
+                    qsort(buffer, bufferCount, sizeof(char*), wordSeriesSortCallback);
+
+                    printf(
+                        "Smallest Word: %s\nLargest Word %s\n",
+                        buffer[0],
+                        buffer[bufferCount - 1]
+                    );
+
+                    optionStats[eFirstLastStrings]++;
+
+                    freeStrings(3, &input, &message, &dashed);
+                    freeStringArray(buffer, bufferCount);
+
+                    passed = true;
+
+                }
+
+            } else {
+
+                buffer[bufferCount] = null;
+
+                if (!allocateString(&buffer[bufferCount], strlen(input) + 1)){
+                    freeStrings(3, &input, &message, &dashed);
+                    freeStringArray(buffer, bufferCount);
+                    return;
+                }
+
+                strcpy(buffer[bufferCount], input);
+
+                if (bufferCount >= STRING_MAX_LARGE * bufferPower){
+
+                    if (!allocateString(&buffer[bufferCount], STRING_MAX_LARGE * ++bufferPower)){
+                        freeStrings(3, &input, &message, &dashed);
+                        freeStringArray(buffer, bufferCount);
+                        return;
+                    }
+
+                }
+
+                memset(input, 0, sizeof(char) * STRING_MAX_SMALL);
+                bufferCount++;
+
+            }
 
         }
 
-        memset(input, 0, sizeof(char) * STRING_MAX_SMALL);
-        bufferCount++;
-
     }
-
-    if (bufferCount < MIN_OPTION_WORD_SERIES)
-        return;
-
-    qsort(buffer, bufferCount, sizeof(char*), wordSeriesSortCallback);
-
-    printf("Smallest word: %s\n", buffer[0]);
-    printf("Largest word: %s\n", buffer[bufferCount - 1]);
-
-    optionStats[eFirstLastStrings]++;
-
-    freeMemory(&input);
-    freeMemory(&message);
-    freeMemory(&dashed);
-
-    for (i = 0; i < bufferCount; i++)
-        freeMemory(&buffer[i]);
 
 }
 
@@ -293,20 +329,73 @@ void wordStopping(int *optionStats) {
     char *input = null;
     char *message = null;
     char *buffer = null;
-    char delim[] = {
-        WORD_SEPARATOR,
-        '\0'
-    };
+    char delim[] = {WORD_SEPARATOR, '\0'};
+    int i = 0;
 
-    if (!allocateMemory(&input, STRING_MAX_SMALL) ||
-        !allocateMemory(&buffer, STRING_MAX_SMALL) ||
-        !allocateMemory(&message, STRING_MAX_MEDIUM)){
+    if (!allocateString(&input, STRING_MAX_SMALL + 1) ||
+        !allocateString(&buffer, STRING_MAX_SMALL + 1) ||
+        !allocateString(&message, STRING_MAX_MEDIUM + 1)){
+        freeStrings(3, &input, &buffer, &message);
         return;
     }
 
-    sprintf(message, "Enter a string (%d-%d characters): ", BASE1, STRING_MAX_SMALL);
+    sprintf(message, "Enter a string (%d-%d characters): ", STRING_MIN, STRING_MAX_SMALL);
 
-    if (getStringFromStdIn(&input, STRING_MAX_SMALL, message, false)){
+    do {
+        if (i++ == 0)
+            memset(input, 0, sizeof(char) * STRING_MAX_SMALL + 1);
+    } while (!getStringFromStdIn(&input, STRING_MAX_SMALL, message, STRING_MIN_NONE, true));
+
+    if (strlen(input) == 0){
+        freeStrings(3, &input, &buffer, &message);
+        return;
+    }
+
+    chr = strtok(input, delim);
+
+    if (chr == null){
+
+        strcpy(buffer, input);
+
+    } else {
+
+        while (chr != null){
+
+            if (strlen(chr) > MIN_OPTION_WORD_STOPPER){
+
+                if (strlen(buffer) == 0){
+
+                    strcpy(buffer, chr);
+
+                } else {
+
+                    strcat(buffer, delim);
+                    strcat(buffer, chr);
+
+                }
+
+            }
+
+            chr = strtok(null, delim);
+
+        }
+
+    }
+
+    if (strlen(buffer) == 0)
+        puts("All words have been stopped.");
+    else
+        printf("\nStopped string: %s\n", buffer);
+
+    optionStats[eWordStopping]++;
+
+
+    /*while (!getStringFromStdIn(&input, STRING_MAX_SMALL, message, true)){
+
+        if (tolower(input[0]) == QUIT_CHAR){
+            freeStrings(3, &input, &buffer, &message);
+            return;
+        }
 
         chr = strtok(input, delim);
 
@@ -342,11 +431,47 @@ void wordStopping(int *optionStats) {
         printf("\nStopped string: %s\n", buffer);
         optionStats[eWordStopping]++;
 
-    }
+    }*/
 
-    freeMemory(&input);
-    freeMemory(&message);
-    freeMemory(&buffer);
+    /*if (getStringFromStdIn(&input, STRING_MAX_SMALL, message, false)){
+
+        chr = strtok(input, delim);
+
+        if (chr == null){
+
+            strcpy(buffer, input);
+
+        } else {
+
+            while (chr != null){
+
+                if (strlen(chr) > MIN_OPTION_WORD_STOPPER){
+
+                    if (strlen(buffer) == 0){
+
+                        strcpy(buffer, chr);
+
+                    } else {
+
+                        strcat(buffer, delim);
+                        strcat(buffer, chr);
+
+                    }
+
+                }
+
+                chr = strtok(null, delim);
+
+            }
+
+        }
+
+        printf("\nStopped string: %s\n", buffer);
+        optionStats[eWordStopping]++;
+
+    }*/
+
+    freeStrings(3, &input, &buffer, &message);
 
 }
 
@@ -355,6 +480,138 @@ void wordStopping(int *optionStats) {
  * menu option 5.
  */
 void rookAndTheBishop(int *optionStats) {
+
+    int i = 0;
+    int j = 0;
+    int row = 0;
+    int column = 0;
+    char chr = null;
+    char *piece = null;
+    char *message = null;
+    char board[CHESS_ROW_MAX + 1][CHESS_COLUMN_MAX + EXTRA_SPACES] = {{0}};
+    bool passed = false;
+
+    if (!allocateString(&piece, MAX_OPTION_INPUT + 1) ||
+        !allocateString(&message, STRING_MAX_MEDIUM)){
+        freeStrings(2, &piece, &message);
+        return;
+    }
+
+    sprintf(message, "Enter Piece type (%c/%c): ", eChessRook, eChessBishop);
+
+    while (!passed){
+
+        if (piece[0] != '\0')
+            memset(piece, 0, MAX_OPTION_INPUT + 1);
+
+        if (getStringFromStdIn(&piece, MAX_OPTION_INPUT, message, STRING_MIN_NONE, true)){
+
+            if (strlen(piece) == 0){
+                freeStrings(2, &piece, &message);
+                return;
+            }
+
+            chr = toupper(piece[0]);
+
+            if (!isValidChessPiece(chr))
+                fputs("Invalid piece. Try again.\n", stderr);
+            else
+                passed = true;
+
+        }
+
+    }
+
+    passed = false;
+    memset(message, 0, STRING_MAX_MEDIUM);
+    sprintf(message, "Row (%d..%d): ", CHESS_ROW_MIN, CHESS_ROW_MAX - 1);
+
+    while (!passed){
+
+        if (getIntegerFromStdIn(&row, MAX_OPTION_INPUT, message, CHESS_ROW_MIN, CHESS_ROW_MAX - 1, true, true)){
+
+            if (row == CHESS_ROW_MIN - 1){
+                freeStrings(2, &piece, &message);
+                return;
+            }
+
+            passed = true;
+        }
+
+    }
+
+    passed = false;
+    memset(message, 0, STRING_MAX_MEDIUM);
+    sprintf(message, "Column (%d..%d): ", CHESS_COLUMN_MIN, CHESS_COLUMN_MAX - 1);
+
+    while (!passed){
+
+        if (getIntegerFromStdIn(&column, MAX_OPTION_INPUT, message, CHESS_COLUMN_MIN, CHESS_COLUMN_MAX - 1, true, true)){
+
+            if (column == CHESS_COLUMN_MIN - 1){
+                freeStrings(2, &piece, &message);
+                return;
+            }
+
+            passed = true;
+        }
+
+    }
+
+    for (i = CHESS_ROW_MIN; i < CHESS_ROW_MAX; i++){
+        memset(board[i], CHESS_SQUARE_DEFAULT, sizeof(char) * CHESS_COLUMN_MAX);
+        board[i][CHESS_COLUMN_MAX] = '\n';
+    }
+
+    switch (chr){
+
+        case eChessBishop:
+
+            /* top left */
+            i = row;
+            j = column;
+            while (--i >= CHESS_ROW_MIN && --j >= CHESS_COLUMN_MIN)
+                board[i][j] = CHESS_SQUARE_MOVABLE;
+
+            /* top right */
+            i = row;
+            j = column;
+            while (--i >= CHESS_ROW_MIN && ++j < CHESS_COLUMN_MAX)
+                board[i][j] = CHESS_SQUARE_MOVABLE;
+
+            /* bottom left */
+            i = row;
+            j = column;
+            while (++i < CHESS_ROW_MAX && --j >= CHESS_COLUMN_MIN)
+                board[i][j] = CHESS_SQUARE_MOVABLE;
+
+            /* bottom right */
+            i = row;
+            j = column;
+            while (++i < CHESS_ROW_MAX && ++j < CHESS_COLUMN_MAX)
+                board[i][j] = CHESS_SQUARE_MOVABLE;
+
+            break;
+
+        case eChessRook:
+
+            /* horizontal */
+            memset(board[row], CHESS_SQUARE_MOVABLE, sizeof(char) * CHESS_COLUMN_MAX);
+            /* vertical */
+            for (i = CHESS_ROW_MIN; i < CHESS_ROW_MAX; i++)
+                board[i][column] = CHESS_SQUARE_MOVABLE;
+
+            break;
+    }
+
+    board[row][column] = chr;
+
+    for (i = CHESS_ROW_MIN; i < CHESS_ROW_MAX; i++)
+        fputs(board[i], stdout);
+
+    optionStats[eRookAndBishop]++;
+
+    freeStrings(2, &piece, &message);
 
 }
 
@@ -373,14 +630,16 @@ void sessionSummary(int *optionStats) {
     int i = 0;
     int spaceLength = strlen(title) - strlen(option) - strlen(count);
 
-    if (!allocateMemory(&spaces, spaceLength + 1) ||
-        !allocateMemory(&optionDashes, strlen(option) + 1) ||
-        !allocateMemory(&countDashes, strlen(count) + 1))
+    if (!allocateString(&spaces, spaceLength + 1) ||
+        !allocateString(&optionDashes, strlen(option) + 1) ||
+        !allocateString(&countDashes, strlen(count) + 1)){
+        freeStrings(4, &spaces, &optionDashes, &countDashes, &dashed);
         return;
+    }
 
-    memset(spaces, ' ', spaceLength);
-    memset(optionDashes, '-', strlen(option));
-    memset(countDashes, '-', strlen(count));
+    memset(spaces, SPACE_CHAR, spaceLength);
+    memset(optionDashes, DASH_CHAR, strlen(option));
+    memset(countDashes, DASH_CHAR, strlen(count));
 
     printf("%s%s%s%s\n%s%s%s\n",
         dashed,
@@ -393,12 +652,9 @@ void sessionSummary(int *optionStats) {
     );
 
     for (; i < trackedMethodMax; i++)
-        printf("%6d%s%5d\n", i + 1, spaces, optionStats[i]);
+        printf("%6d%s%5d\n", BASE1 + i, spaces, optionStats[i]);
 
-    freeMemory(&dashed);
-    freeMemory(&spaces);
-    freeMemory(&optionDashes);
-    freeMemory(&countDashes);
+    freeStrings(4, &spaces, &optionDashes, &countDashes, &dashed);
 
 }
 
@@ -411,15 +667,19 @@ void readRestOfLine() {
     int c;
 
     /* Read until the end of the line or end-of-file. */
+    /*while ((c = fgetc(stdin)) != '\n' && c != EOF)
+        ;*/
+
+    int count = 0;
     while ((c = fgetc(stdin)) != '\n' && c != EOF)
-        ;
+        printf("%d consumed %c\n", count++, c);
 
     /* Clear the error and end-of-file flags. */
     clearerr(stdin);
 
 }
 
-bool getIntegerFromStdIn(int *result, int length, const char *message, int min, int max, bool showError){
+bool getIntegerFromStdIn(int *result, int length, const char *message, int min, int max, bool showError, bool allowEmpty){
 
     int i = 0;
     char *s = null;
@@ -427,9 +687,11 @@ bool getIntegerFromStdIn(int *result, int length, const char *message, int min, 
     char *errorMessage = null;
     bool passed = false;
 
-    if (!allocateMemory(&s, length + EXTRA_SPACES) ||
-        !allocateMemory(&errorMessage, STRING_MAX_MEDIUM))
+    if (!allocateString(&s, length + EXTRA_SPACES) ||
+        !allocateString(&errorMessage, STRING_MAX_MEDIUM)){
+        freeStrings(2, &s, &errorMessage);
         return false;
+    }
 
     sprintf(errorMessage, "%s %d %s %d. %s",
         "You must enter a number between",
@@ -443,6 +705,12 @@ bool getIntegerFromStdIn(int *result, int length, const char *message, int min, 
 
         fputs(message, stdout);
         fgets(s, length + EXTRA_SPACES, stdin);
+
+        if (strlen(s) == 1 && s[0] == '\n' && allowEmpty){
+            *result = min - 1;
+            freeStrings(2, &s, &errorMessage);
+            break;
+        }
 
         if (s[strlen(s) - 1] != '\n') {
 
@@ -465,8 +733,7 @@ bool getIntegerFromStdIn(int *result, int length, const char *message, int min, 
                     *result = 0;
                     /*passed = true;*/
 
-                    freeMemory(&s);
-                    freeMemory(&errorMessage);
+                    freeStrings(2, &s, &errorMessage);
                     return false;
 
                 }
@@ -476,8 +743,7 @@ bool getIntegerFromStdIn(int *result, int length, const char *message, int min, 
                 *result = i;
                 passed = true;
 
-                freeMemory(&s);
-                freeMemory(&errorMessage);
+                freeStrings(2, &s, &errorMessage);
 
             }
 
@@ -489,15 +755,17 @@ bool getIntegerFromStdIn(int *result, int length, const char *message, int min, 
 
 }
 
-bool getStringFromStdIn(char **result, int length, const char *message, bool showError){
+bool getStringFromStdIn(char **result, int length, const char *message, int min, bool showError){
 
     char *s = null;
     char *errorMessage = null;
     bool passed = false;
 
-    if (!allocateMemory(&s, length + EXTRA_SPACES) ||
-        !allocateMemory(&errorMessage, STRING_MAX_MEDIUM))
+    if (!allocateString(&s, length + EXTRA_SPACES) ||
+        !allocateString(&errorMessage, STRING_MAX_MEDIUM)){
+        freeStrings(2, &s, &errorMessage);
         return false;
+    }
 
     if (showError)
         sprintf(errorMessage, "Invalid entry! Try again.\n");
@@ -511,7 +779,45 @@ bool getStringFromStdIn(char **result, int length, const char *message, bool sho
 
         len = strlen(s);
 
+        if (s[len - 1] != '\n')
+            readRestOfLine();
+
         if (len < EXTRA_SPACES || s[len - 1] != '\n') {
+
+            if (len < EXTRA_SPACES && min == STRING_MIN_NONE)
+                /*break;*/
+                passed = true;
+
+            else if (showError)
+                fputs(errorMessage, stderr);
+
+        } else {
+
+            s[len - 1] = '\0';
+            strcpy(*result, s);
+            passed = true;
+
+        }
+
+    }
+
+    freeStrings(2, &s, &errorMessage);
+
+    return passed;
+
+    /*while (!passed) {
+
+        size_t len;
+
+        fputs(message, stdout);
+        fgets(s, length + EXTRA_SPACES, stdin);
+
+        len = strlen(s);
+
+        if (len < EXTRA_SPACES || s[len - 1] != '\n') {
+
+            if (s[len - 1] != '\n')
+                readRestOfLine();
 
             if (showError){
 
@@ -520,10 +826,7 @@ bool getStringFromStdIn(char **result, int length, const char *message, bool sho
             } else {
 
                 strcpy(*result, "\0");
-                /*passed = true;*/
-
-                freeMemory(&s);
-                freeMemory(&errorMessage);
+                freeStrings(2, &s, &errorMessage);
 
                 return false;
 
@@ -535,34 +838,33 @@ bool getStringFromStdIn(char **result, int length, const char *message, bool sho
             strcpy(*result, s);
             passed = true;
 
-            freeMemory(&s);
-            freeMemory(&errorMessage);
+            freeStrings(2, &s, &errorMessage);
 
         }
 
     }
 
-    return true;
+    return true;*/
 
 }
 
-bool allocateMemory(char **memory, int size){
+bool allocateString(char **str, int size){
 
     bool result = false;
     size_t newSize = sizeof(char) * size;
-    size_t oldSize = *memory == null ? 0 : sizeof(char) * strlen(*memory);
+    size_t oldSize = *str == null ? 0 : sizeof(char) * strlen(*str);
 
     if (newSize > 0){
 
-        *memory = realloc(*memory, newSize);
+        *str = realloc(*str, newSize);
 
-        if (*memory == null){
+        if (*str == null){
 
             fputs(ERROR_MEMORY, stderr);
 
         } else {
 
-            memset(*memory + oldSize, 0, newSize - oldSize);
+            memset(*str + oldSize, 0, newSize - oldSize);
             result = true;
 
         }
@@ -573,14 +875,37 @@ bool allocateMemory(char **memory, int size){
 
 }
 
-void freeMemory(char **memory){
+void freeString(char **str){
 
-    if (*memory != null){
+    if (*str != null){
 
-        free(*memory);
-        *memory = null;
+        free(*str);
+        *str = null;
 
     }
+
+}
+
+void freeStringArray(char **arr, int length){
+
+    int i = 0;
+
+    while (i < length)
+        freeString(&arr[i++]);
+
+}
+
+void freeStrings(int length, ...){
+
+    int i = 0;
+    va_list ap;
+
+    va_start(ap, length);
+
+    for (i = 0; i < length; i++)
+        freeString(va_arg(ap, char**));
+
+    va_end(ap);
 
 }
 
@@ -599,10 +924,10 @@ char *createDashes(const char *str){
     int max = (len << 1) + DASH_EXTRA_SPACES; /* including 2 \n's and \0*/
     char *dashes = null;
 
-    if (allocateMemory(&dashes, max)){
+    if (allocateString(&dashes, max)){
 
         sprintf(dashes, "%s\n", str);
-        memset(dashes + (sizeof(char) * strlen(dashes)), '-', len);
+        memset(dashes + (sizeof(char) * strlen(dashes)), DASH_CHAR, len);
         strcat(dashes, "\n");
 
     }
@@ -611,3 +936,8 @@ char *createDashes(const char *str){
 
 }
 
+bool isValidChessPiece(char c){
+
+    return c == eChessRook || c == eChessBishop;
+
+}
