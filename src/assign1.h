@@ -22,8 +22,7 @@
 /* This is used to compensate for the extra character spaces taken up by the '\n' and '\0' when user is asked for input through fgets(). */
 #define EXTRA_SPACES 2
 
-/* Specifies the maximum input length a user can enter for the options
-   menu. */
+/* Specifies the maximum input length a user can enter for the options menu. */
 #define MAX_OPTION_INPUT 1
 
 /* Boolean constants. */
@@ -32,41 +31,37 @@
 
 
 /* Custom Constants + Definitions. */
-typedef enum {
-    eFibonacciSeries = 0,
-    ePhoneNumberConversion = 1,
-    eFirstLastStrings = 2,
-    eWordStopping = 3,
-    eRookAndBishop = 4,
-    trackedMethodMax = 5
-    /*,
-    eSessionSummary = 5*/
-} trackedMethod;
 
-/*typedef enum {
-    FALSE = 0,
-    TRUE = 1
-} BOOLEAN;*/
 typedef enum {
     false = FALSE,
     true = TRUE
 } BOOLEAN;
+
+typedef BOOLEAN bool;
+
+typedef struct {
+    int index;
+    const char* str;
+    bool tracked;
+    void (*method)(int*);
+} menuoption_t;
 
 typedef struct {
     int digit;
     const char *code;
 } keypad_t;
 
-/*typedef unsigned int UINT;
-typedef unsigned char UCHAR;*/
-typedef BOOLEAN bool;
-/*typedef UINT uint;
-typedef UCHAR uchar;*/
+typedef enum {
+    eChessRook = 'R',
+    eChessBishop = 'B'
+} chessPiece;
 
-/*
-#define false FALSE
-#define true TRUE
-*/
+typedef enum {
+    eOptionStatReset = 0,
+    eOptionStatIncrement = 1,
+    eOptionStatDecrement = 2
+} optionStatAction;
+
 #define null NULL
 
 /* used when using 1 based index instead of usual 0 based */
@@ -76,9 +71,12 @@ typedef UCHAR uchar;*/
 #define START_POWER 1
 
 #define MAX_KEYPAD 10
+#define MIN_MENU_OPTION BASE1
+#define MAX_MENU_OPTION NUM_OPTION_STATS + 2 /* include Exit (+1) and and max (+1) */
 
 #define STRING_MIN_NONE 0
 #define STRING_MIN 1
+#define STRING_MAX_TINY 11
 #define STRING_MAX_SMALL 20
 #define STRING_MAX_MEDIUM 256
 #define STRING_MAX_LARGE 1024
@@ -108,11 +106,14 @@ typedef UCHAR uchar;*/
 
 #define FIRST_LAST_FINISH_CHAR 'q'
 
+#define MENU_TITLE_FIBONACCI "Fibonacci Numbers"
+#define MENU_TITLE_PHONENUMBERS "Translate Phone Numbers"
+#define MENU_TITLE_FIRSTLASTSTRINGS "First and Last Strings"
+#define MENU_TITLE_WORDSTOPPING "Word Stopping"
+#define MENU_TITLE_ROOKANDBISHOP "Rook and Bishop"
+#define MENU_TITLE_SESSIONSUMMARY "Session Summary"
+#define MENU_TITLE_EXIT "Exit"
 
-typedef enum {
-    eChessRook = 'R',
-    eChessBishop = 'B'
-} chessPiece;
 
 /* Function prototypes. */
 void fibonacciNumbers(int *);
@@ -134,3 +135,7 @@ void freeStrings(int length, ...);
 int wordSeriesSortCallback(const void *a, const void *b);
 char *createDashes(const char *str);
 bool isValidChessPiece(char c);
+void exitApplication(int *abort);
+static menuoption_t *getMenuOptions();
+static menuoption_t getMenuOptionByTitle(char *title);
+void performOptionStatAction(int *optionStats, optionStatAction action, char *title);

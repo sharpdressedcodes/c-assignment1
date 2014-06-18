@@ -15,70 +15,42 @@
  * You may ignore this parameter and its relevance to each function
  * until you develop the sessionSummary() function.
  */
-
 int main(void) {
 
     int optionStats[NUM_OPTION_STATS];
-    /*int optionStats[trackedMethodMax] = {0};*/
-
-    int i = 0;
     int option = 0;
     char *menu = null;
     bool abort = false;
+    menuoption_t *ptr = null;
+    menuoption_t *options = getMenuOptions();
 
     if (!allocateString(&menu, STRING_MAX_LARGE))
         return EXIT_FAILURE;
 
-    for (i = 0; i < NUM_OPTION_STATS; i++)
-        optionStats[i] = 0;
+    performOptionStatAction(optionStats, eOptionStatReset, null);
 
-    sprintf(menu, "%s%s%s%s%s%s%s%s%s",
-        "\nMain Menu:\n",
-        "1) Fibonacci Numbers\n",
-        "2) Translating Phone Numbers\n",
-        "3) First and Last Strings\n",
-        "4) Word Stopping\n",
-        "5) Rook and Bishop\n",
-        "6) Session Summary\n",
-        "7) Exit\n\n",
-        "Select your option: "
-    );
+    strcpy(menu, "\nMain Menu:\n");
+
+    for (ptr = options; ptr->index != MAX_MENU_OPTION; ++ptr){
+        char s[STRING_MAX_MEDIUM] = {0};
+        sprintf(s, "%d) %s\n", ptr->index, ptr->str);
+        strcat(menu, s);
+    }
+
+    strcat(menu, "\nSelect your option: ");
 
     while (!abort) {
 
         /* NUM_OPTION_STATS + 1 to count the exit option. */
-        if (getIntegerFromStdIn(&option, MAX_OPTION_INPUT, menu, BASE1, NUM_OPTION_STATS + 1, true, false)) {
-            switch (option) {
+        if (getIntegerFromStdIn(&option, MAX_OPTION_INPUT, menu, MIN_MENU_OPTION, NUM_OPTION_STATS + 1, true, false)) {
 
-                case 1:
-                    fibonacciNumbers(optionStats);
+            for (ptr = options; ptr->index != MAX_MENU_OPTION; ++ptr){
+                if (option == ptr->index){
+                    ptr->method(strcmp(ptr->str, MENU_TITLE_EXIT) == 0 ? (int*)&abort : optionStats);
                     break;
-
-                case 2:
-                    phoneNumbers(optionStats);
-                    break;
-
-                case 3:
-                    firstLastStrings(optionStats);
-                    break;
-
-                case 4:
-                    wordStopping(optionStats);
-                    break;
-
-                case 5:
-                    rookAndTheBishop(optionStats);
-                    break;
-
-                case 6:
-                    sessionSummary(optionStats);
-                    break;
-
-                case 7:
-                    abort = true;
-                    break;
-
+                }
             }
+
         }
 
     }
@@ -118,7 +90,7 @@ void fibonacciNumbers(int *optionStats) {
         MAX_OPTION_FIBONACCI
     );
 
-    if (getIntegerFromStdIn(&limit, strlen(fibMax), message, MIN_OPTION_FIBONACCI, MAX_OPTION_FIBONACCI, false, true)) {
+    if (getIntegerFromStdIn(&limit, strlen(fibMax), message, MIN_OPTION_FIBONACCI, MAX_OPTION_FIBONACCI, false, true) && limit >= MIN_OPTION_FIBONACCI ) {
 
         printf("Fibonacci sequence for %d terms:\n", limit);
 
@@ -141,7 +113,7 @@ void fibonacciNumbers(int *optionStats) {
         printf("\nSum: %d\n", sum);
         printf("Average: %.2f\n", average);
 
-        optionStats[eFibonacciSeries]++;
+        performOptionStatAction(optionStats, eOptionStatIncrement, MENU_TITLE_FIBONACCI);
 
     }
 
@@ -166,20 +138,20 @@ void phoneNumbers(int *optionStats) {
         {6, "MNO"},
         {7, "PQRS"}, /* added Q */
         {8, "TUV"},
-        {9, "WXYZ"}, /* added W */
+        {9, "WXYZ"},
         {MAX_KEYPAD, null}
     };
 
-    if (!allocateString(&input, STRING_MAX_MEDIUM) ||
-        !allocateString(&output, STRING_MAX_MEDIUM) ||
+    if (!allocateString(&input, STRING_MAX_TINY) ||
+        !allocateString(&output, STRING_MAX_TINY) ||
         !allocateString(&message, STRING_MAX_MEDIUM)){
         freeStrings(3, &input, &output, &message);
         return;
     }
 
-    sprintf(message, "Enter phone number (max %d characters): ", STRING_MAX_MEDIUM);
+    sprintf(message, "Enter phone number (max %d characters): ", STRING_MAX_TINY);
 
-    if (getStringFromStdIn(&input, STRING_MAX_MEDIUM, message, STRING_MIN_NONE, true) && strlen(input) > 0){
+    if (getStringFromStdIn(&input, STRING_MAX_TINY, message, STRING_MIN_NONE, true) && strlen(input) > 0){
 
         for (i = 0; i < strlen(input); i++){
 
@@ -205,7 +177,7 @@ void phoneNumbers(int *optionStats) {
         output[i] = '\0';
         printf("%s\n", output);
 
-        optionStats[ePhoneNumberConversion]++;
+        performOptionStatAction(optionStats, eOptionStatIncrement, MENU_TITLE_PHONENUMBERS);
 
     }
 
@@ -241,15 +213,7 @@ void firstLastStrings(int *optionStats) {
 
     while (!passed){
 
-        if (!getStringFromStdIn(&input, STRING_MAX_SMALL, message, STRING_MIN_NONE, true)){
-
-            /*if (strlen(input) == STRING_MIN_NONE){
-                freeStrings(3, &input, &message, &dashed);
-                freeStringArray(buffer, bufferCount);
-                return;
-            }*/
-
-        } else {
+        if (getStringFromStdIn(&input, STRING_MAX_SMALL, message, STRING_MIN_NONE, true)){
 
             if (strlen(input) == STRING_MIN_NONE){
                 freeStrings(3, &input, &message, &dashed);
@@ -273,7 +237,7 @@ void firstLastStrings(int *optionStats) {
                         buffer[bufferCount - 1]
                     );
 
-                    optionStats[eFirstLastStrings]++;
+                    performOptionStatAction(optionStats, eOptionStatIncrement, MENU_TITLE_FIRSTLASTSTRINGS);
 
                     freeStrings(3, &input, &message, &dashed);
                     freeStringArray(buffer, bufferCount);
@@ -387,89 +351,7 @@ void wordStopping(int *optionStats) {
     else
         printf("\nStopped string: %s\n", buffer);
 
-    optionStats[eWordStopping]++;
-
-
-    /*while (!getStringFromStdIn(&input, STRING_MAX_SMALL, message, true)){
-
-        if (tolower(input[0]) == QUIT_CHAR){
-            freeStrings(3, &input, &buffer, &message);
-            return;
-        }
-
-        chr = strtok(input, delim);
-
-        if (chr == null){
-
-            strcpy(buffer, input);
-
-        } else {
-
-            while (chr != null){
-
-                if (strlen(chr) > MIN_OPTION_WORD_STOPPER){
-
-                    if (strlen(buffer) == 0){
-
-                        strcpy(buffer, chr);
-
-                    } else {
-
-                        strcat(buffer, delim);
-                        strcat(buffer, chr);
-
-                    }
-
-                }
-
-                chr = strtok(null, delim);
-
-            }
-
-        }
-
-        printf("\nStopped string: %s\n", buffer);
-        optionStats[eWordStopping]++;
-
-    }*/
-
-    /*if (getStringFromStdIn(&input, STRING_MAX_SMALL, message, false)){
-
-        chr = strtok(input, delim);
-
-        if (chr == null){
-
-            strcpy(buffer, input);
-
-        } else {
-
-            while (chr != null){
-
-                if (strlen(chr) > MIN_OPTION_WORD_STOPPER){
-
-                    if (strlen(buffer) == 0){
-
-                        strcpy(buffer, chr);
-
-                    } else {
-
-                        strcat(buffer, delim);
-                        strcat(buffer, chr);
-
-                    }
-
-                }
-
-                chr = strtok(null, delim);
-
-            }
-
-        }
-
-        printf("\nStopped string: %s\n", buffer);
-        optionStats[eWordStopping]++;
-
-    }*/
+    performOptionStatAction(optionStats, eOptionStatIncrement, MENU_TITLE_WORDSTOPPING);
 
     freeStrings(3, &input, &buffer, &message);
 
@@ -485,7 +367,7 @@ void rookAndTheBishop(int *optionStats) {
     int j = 0;
     int row = 0;
     int column = 0;
-    char chr = null;
+    char chr = 0;
     char *piece = null;
     char *message = null;
     char board[CHESS_ROW_MAX + 1][CHESS_COLUMN_MAX + EXTRA_SPACES] = {{0}};
@@ -609,7 +491,7 @@ void rookAndTheBishop(int *optionStats) {
     for (i = CHESS_ROW_MIN; i < CHESS_ROW_MAX; i++)
         fputs(board[i], stdout);
 
-    optionStats[eRookAndBishop]++;
+    performOptionStatAction(optionStats, eOptionStatIncrement, MENU_TITLE_ROOKANDBISHOP);
 
     freeStrings(2, &piece, &message);
 
@@ -620,15 +502,15 @@ void rookAndTheBishop(int *optionStats) {
  */
 void sessionSummary(int *optionStats) {
 
-    char *title = "Session summary";
+    char *title = MENU_TITLE_SESSIONSUMMARY;
     char *option = "Option";
     char *count = "Count";
     char *dashed = createDashes(title);
     char *spaces = null;
     char *optionDashes = null;
     char *countDashes = null;
-    int i = 0;
-    int spaceLength = strlen(title) - strlen(option) - strlen(count);
+    const int spaceLength = strlen(title) - strlen(option) - strlen(count);
+    menuoption_t *options = getMenuOptions();
 
     if (!allocateString(&spaces, spaceLength + 1) ||
         !allocateString(&optionDashes, strlen(option) + 1) ||
@@ -651,8 +533,9 @@ void sessionSummary(int *optionStats) {
         countDashes
     );
 
-    for (; i < trackedMethodMax; i++)
-        printf("%6d%s%5d\n", BASE1 + i, spaces, optionStats[i]);
+    for (; options->index != MAX_MENU_OPTION; ++options)
+        if (options->tracked)
+            printf("%6d%s%5d\n", options->index, spaces, optionStats[options->index - MIN_MENU_OPTION]);
 
     freeStrings(4, &spaces, &optionDashes, &countDashes, &dashed);
 
@@ -667,12 +550,8 @@ void readRestOfLine() {
     int c;
 
     /* Read until the end of the line or end-of-file. */
-    /*while ((c = fgetc(stdin)) != '\n' && c != EOF)
-        ;*/
-
-    int count = 0;
     while ((c = fgetc(stdin)) != '\n' && c != EOF)
-        printf("%d consumed %c\n", count++, c);
+        ;
 
     /* Clear the error and end-of-file flags. */
     clearerr(stdin);
@@ -805,54 +684,13 @@ bool getStringFromStdIn(char **result, int length, const char *message, int min,
 
     return passed;
 
-    /*while (!passed) {
-
-        size_t len;
-
-        fputs(message, stdout);
-        fgets(s, length + EXTRA_SPACES, stdin);
-
-        len = strlen(s);
-
-        if (len < EXTRA_SPACES || s[len - 1] != '\n') {
-
-            if (s[len - 1] != '\n')
-                readRestOfLine();
-
-            if (showError){
-
-                fputs(errorMessage, stderr);
-
-            } else {
-
-                strcpy(*result, "\0");
-                freeStrings(2, &s, &errorMessage);
-
-                return false;
-
-            }
-
-        } else {
-
-            s[len - 1] = '\0';
-            strcpy(*result, s);
-            passed = true;
-
-            freeStrings(2, &s, &errorMessage);
-
-        }
-
-    }
-
-    return true;*/
-
 }
 
 bool allocateString(char **str, int size){
 
     bool result = false;
-    size_t newSize = sizeof(char) * size;
-    size_t oldSize = *str == null ? 0 : sizeof(char) * strlen(*str);
+    const size_t newSize = sizeof(char) * size;
+    const size_t oldSize = *str == null ? 0 : sizeof(char) * strlen(*str);
 
     if (newSize > 0){
 
@@ -920,8 +758,8 @@ int wordSeriesSortCallback(const void *a, const void *b){
 
 char *createDashes(const char *str){
 
-    int len = strlen(str);
-    int max = (len << 1) + DASH_EXTRA_SPACES; /* including 2 \n's and \0*/
+    const int len = strlen(str);
+    const int max = (len << 1) + DASH_EXTRA_SPACES; /* including 2 \n's and \0*/
     char *dashes = null;
 
     if (allocateString(&dashes, max)){
@@ -939,5 +777,62 @@ char *createDashes(const char *str){
 bool isValidChessPiece(char c){
 
     return c == eChessRook || c == eChessBishop;
+
+}
+
+void exitApplication(int *abort){
+
+    *abort = true;
+
+}
+
+static menuoption_t *getMenuOptions(){
+
+    static menuoption_t options[] = {
+        {MIN_MENU_OPTION, MENU_TITLE_FIBONACCI, true, &fibonacciNumbers},
+        {MIN_MENU_OPTION + 1, MENU_TITLE_PHONENUMBERS, true, &phoneNumbers},
+        {MIN_MENU_OPTION + 2, MENU_TITLE_FIRSTLASTSTRINGS, true, &firstLastStrings},
+        {MIN_MENU_OPTION + 3, MENU_TITLE_WORDSTOPPING, true, &wordStopping},
+        {MIN_MENU_OPTION + 4, MENU_TITLE_ROOKANDBISHOP, true, &rookAndTheBishop},
+        {MIN_MENU_OPTION + 5, MENU_TITLE_SESSIONSUMMARY, false, &sessionSummary},
+        {MIN_MENU_OPTION + 6, MENU_TITLE_EXIT, false, &exitApplication},
+        {MAX_MENU_OPTION, null, false, null}
+    };
+
+    return options;
+
+}
+
+static menuoption_t getMenuOptionByTitle(char *title){
+
+    menuoption_t *ptr = getMenuOptions();
+
+    for (; ptr->index != MAX_MENU_OPTION; ++ptr)
+        if (strcmp(ptr->str, title) == 0)
+            break;
+
+    return *ptr;
+
+}
+
+void performOptionStatAction(int *optionStats, optionStatAction action, char *title){
+
+    int i = 0;
+
+    switch (action){
+
+        case eOptionStatReset:
+            for (i = 0; i < NUM_OPTION_STATS; i++)
+                optionStats[i] = 0;
+            break;
+
+        case eOptionStatIncrement:
+            optionStats[getMenuOptionByTitle(title).index - MIN_MENU_OPTION]++;
+            break;
+
+        case eOptionStatDecrement:
+            optionStats[getMenuOptionByTitle(title).index - MIN_MENU_OPTION]--;
+            break;
+    }
 
 }
