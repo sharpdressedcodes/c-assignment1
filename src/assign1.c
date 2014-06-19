@@ -364,13 +364,12 @@ void wordStopping(int *optionStats) {
 void rookAndTheBishop(int *optionStats) {
 
     int i = 0;
-    int j = 0;
     int row = 0;
     int column = 0;
     char chr = 0;
     char *piece = null;
     char *message = null;
-    char board[CHESS_ROW_MAX + 1][CHESS_COLUMN_MAX + EXTRA_SPACES] = {{0}};
+    char board[CHESS_ROW_MAX][CHESS_COLUMN_MAX + 1] = {{0}};
     bool passed = false;
 
     if (!allocateString(&piece, MAX_OPTION_INPUT + 1) ||
@@ -440,56 +439,10 @@ void rookAndTheBishop(int *optionStats) {
 
     }
 
-    for (i = CHESS_ROW_MIN; i < CHESS_ROW_MAX; i++){
-        memset(board[i], CHESS_SQUARE_DEFAULT, sizeof(char) * CHESS_COLUMN_MAX);
-        board[i][CHESS_COLUMN_MAX] = '\n';
-    }
-
-    switch (chr){
-
-        case eChessBishop:
-
-            /* top left */
-            i = row;
-            j = column;
-            while (--i >= CHESS_ROW_MIN && --j >= CHESS_COLUMN_MIN)
-                board[i][j] = CHESS_SQUARE_MOVABLE;
-
-            /* top right */
-            i = row;
-            j = column;
-            while (--i >= CHESS_ROW_MIN && ++j < CHESS_COLUMN_MAX)
-                board[i][j] = CHESS_SQUARE_MOVABLE;
-
-            /* bottom left */
-            i = row;
-            j = column;
-            while (++i < CHESS_ROW_MAX && --j >= CHESS_COLUMN_MIN)
-                board[i][j] = CHESS_SQUARE_MOVABLE;
-
-            /* bottom right */
-            i = row;
-            j = column;
-            while (++i < CHESS_ROW_MAX && ++j < CHESS_COLUMN_MAX)
-                board[i][j] = CHESS_SQUARE_MOVABLE;
-
-            break;
-
-        case eChessRook:
-
-            /* horizontal */
-            memset(board[row], CHESS_SQUARE_MOVABLE, sizeof(char) * CHESS_COLUMN_MAX);
-            /* vertical */
-            for (i = CHESS_ROW_MIN; i < CHESS_ROW_MAX; i++)
-                board[i][column] = CHESS_SQUARE_MOVABLE;
-
-            break;
-    }
-
-    board[row][column] = chr;
+    plotChessPiece(chr, row, column, board);
 
     for (i = CHESS_ROW_MIN; i < CHESS_ROW_MAX; i++)
-        fputs(board[i], stdout);
+        printf("%s\n", board[i]);
 
     performOptionStatAction(optionStats, eOptionStatIncrement, MENU_TITLE_ROOKANDBISHOP);
 
@@ -771,6 +724,60 @@ char *createDashes(const char *str){
     }
 
     return dashes;
+
+}
+
+void plotChessPiece(char piece, int row, int column, char board[][CHESS_COLUMN_MAX + 1]){
+
+    int i = 0;
+    int j = 0;
+
+    for (i = CHESS_ROW_MIN; i < CHESS_ROW_MAX; i++)
+        memset(board[i], CHESS_SQUARE_DEFAULT, sizeof(char) * CHESS_COLUMN_MAX);
+
+    switch (piece){
+
+        case eChessBishop:
+
+            /* top left */
+            i = row;
+            j = column;
+            while (--i >= CHESS_ROW_MIN && --j >= CHESS_COLUMN_MIN)
+                board[i][j] = CHESS_SQUARE_MOVABLE;
+
+            /* top right */
+            i = row;
+            j = column;
+            while (--i >= CHESS_ROW_MIN && ++j < CHESS_COLUMN_MAX)
+                board[i][j] = CHESS_SQUARE_MOVABLE;
+
+            /* bottom left */
+            i = row;
+            j = column;
+            while (++i < CHESS_ROW_MAX && --j >= CHESS_COLUMN_MIN)
+                board[i][j] = CHESS_SQUARE_MOVABLE;
+
+            /* bottom right */
+            i = row;
+            j = column;
+            while (++i < CHESS_ROW_MAX && ++j < CHESS_COLUMN_MAX)
+                board[i][j] = CHESS_SQUARE_MOVABLE;
+
+            break;
+
+        case eChessRook:
+
+            /* horizontal */
+            memset(board[row], CHESS_SQUARE_MOVABLE, sizeof(char) * CHESS_COLUMN_MAX);
+
+            /* vertical */
+            for (i = CHESS_ROW_MIN; i < CHESS_ROW_MAX; i++)
+                board[i][column] = CHESS_SQUARE_MOVABLE;
+
+            break;
+    }
+
+    board[row][column] = piece;
 
 }
 

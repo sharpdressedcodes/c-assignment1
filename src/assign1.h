@@ -135,6 +135,7 @@ void freeStrings(int length, ...);
 int wordSeriesSortCallback(const void *a, const void *b);
 char *createDashes(const char *str);
 bool isValidChessPiece(char c);
+void plotChessPiece(char piece, int row, int column, char board[][CHESS_COLUMN_MAX + 1]);
 void exitApplication(int *abort);
 static menuoption_t *getMenuOptions();
 static menuoption_t getMenuOptionByTitle(char *title);
