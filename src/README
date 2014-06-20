@@ -31,35 +31,49 @@ Requirement 10 - Buffer handling                            : Yes/No
 Requirement 11 - Input validation                           : Yes/No
 Requirement 12 - Coding conventions                         : Yes/No
 
+Requirements 1 - 8:
+Look in assign1.c
+
+Requirement  9 - Return to Menu Functionality:
+This is implemented by simply ignoring a returned false value when
+getting an integer or string from stdin.
+
+Requirement 10 - Functional Abstraction:
+I think I have functional abstraction. All my methods have been broken up
+into smaller methods and nothing is really being called more than once.
+
+Requirement 10 - Buffer handling:
+Have a look at getIntegerFromStdIn and getStringFromStdIn methods.
+If a string is too long, it just gets consumed.
+
+Requirement 11 - Input validation:
+This occurs in every method that gets input from the user.
+(which are in requirements 1-8).
+
+Requirement 12 - Coding conventions:
+I hope I have followed proper coding conventions. I do my best to make it
+readable.
+
 
 -----------------------------------------------------------------------------
 Known bugs:
 -----------------------------------------------------------------------------
 
-None/EDIT HERE
+None
 
 -----------------------------------------------------------------------------
 Assumptions:
 -----------------------------------------------------------------------------
 
-None/EDIT HERE
+None
 
 -----------------------------------------------------------------------------
 Any other notes for the marker:
 -----------------------------------------------------------------------------
 
-I changed the Boolean constants. I know it said not to modify the startup code
-but I did it for the better! I could have just left it as it was, and used:
-
-typedef enum {
-	false = FALSE,
-	true = TRUE
-};
-
-but I think my solution is more elegant. I have also used dynamic memory
-because I wanted to learn it. In regards to the "word Series" requirement,
-the limit is almost unlimited in the sense that it should keep adding
-words until the user runs out of memory.
+I have used dynamic memory because I wanted to learn it. In regards to the 
+"word Series" requirement, the limit is almost unlimited in the sense that it 
+should keep adding words until the user runs out of memory.
 
 -------------------------------------------------------------------------------------
 IDE used - comments on its use when transferred to the Linux core teaching 
@@ -68,6 +82,3 @@ machines.
 
 OS: Ubuntu 14.04
 IDE: Standard one in the terminal, Nano, and Eclipse.
-
-I usually use Windows, but have chosen to do this subject in Linux to make things
-easier (also so I can learn).
