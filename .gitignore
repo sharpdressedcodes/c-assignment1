@@ -1,5 +1,5 @@
 .project
+.settings
 .cproject
 /Debug
 *.zip
-

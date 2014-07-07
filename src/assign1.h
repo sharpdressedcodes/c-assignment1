@@ -213,22 +213,22 @@ void sessionSummary(int *optionStats);
 void readRestOfLine();
 
 /* Custom function prototypes. */
-bool getIntegerFromStdIn(int *result, int length, const char *message,
-        int min, int max, bool showError, bool allowEmpty);
-bool getStringFromStdIn(char **result, int length, const char *message,
-        int min, bool showError);
-bool allocateString(char **str, int size);
+bool getIntegerFromStdIn(int *result, const int length, const char *message,
+        const int min, const int max, bool showError, bool allowEmpty);
+bool getStringFromStdIn(char *result, const int length, const char *message,
+        const int min, bool showError);
+bool allocateString(char **str, const int size);
 void freeString(char **str);
-void freeStringArray(char **arr, int length);
-void freeStrings(int length, ...);
+void freeStringArray(char **arr, const int length);
+void freeStrings(const int length, ...);
 int wordSeriesSortCallback(const void *a, const void *b);
 char *createDashes(const char *str);
-void plotChessPieces(char piece, int row, int column,
+void plotChessPieces(const char piece, const int row, const int column,
         char board[][CHESS_COLUMN_MAX + 1]);
-bool isValidChessPiece(char c);
+bool isValidChessPiece(const char c);
 void exitApplication(int *abort);
+keypad_t *getKeypad();
 menuoption_t *getMenuOptions();
-menuoption_t *getMenuOptionByIndex(int index);
-menuoption_t *getMenuOptionByTitle(char *title);
-void performOptionStatAction(int *optionStats, optionStatAction action,
-        char *title);
+menuoption_t *getMenuOptionByIndex(const int index);
+menuoption_t *getMenuOptionByTitle(const char *title);
+void statAction(int *optionStats, optionStatAction action, const char *title);

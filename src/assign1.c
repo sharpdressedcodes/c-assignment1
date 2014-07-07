@@ -23,17 +23,17 @@ int main(void) {
 
     int optionStats[NUM_OPTION_STATS];
     int option = 0;
-    char *menu = null;
+    char menu[STRING_MAX_LARGE] = {0};
     bool abort = false;
     menuoption_t *ptr = null;
     menuoption_t *options = getMenuOptions();
 
-    /* Try to allocate memory for menu string. */
-    if (!allocateString(&menu, STRING_MAX_LARGE))
-        return EXIT_FAILURE;
+    /* Stupid Eclipse won't show the console until after it has stopped.
+     * See http://stackoverflow.com/questions/13035075/printf-not-printing-on-console */
+    setvbuf (stdout, NULL, _IONBF, 0);
 
     /* Reset statistics. */
-    performOptionStatAction(optionStats, eOptionStatReset, null);
+    statAction(optionStats, eOptionStatReset, null);
 
     /* ################################################################# */
     /* Menu creation. */
@@ -80,9 +80,6 @@ int main(void) {
 
     }
 
-    /* Cleanup. */
-    freeString(&menu);
-
     return EXIT_SUCCESS;
 
 }
@@ -103,15 +100,8 @@ void fibonacciNumbers(int *optionStats) {
     int num2 = FIBONACCI_NUM2;
     int sum = 0;
     float average = 0;
-    char *message = null;
-    char *fibMax = null;
-
-    /* Try to allocate memory. Cleanup if it fails. */
-    if (!allocateString(&message, STRING_MAX_MEDIUM) ||
-        !allocateString(&fibMax, STRING_MAX_MEDIUM)){
-        freeStrings(2, &message, &fibMax);
-        return;
-    }
+    char message[STRING_MAX_MEDIUM] = {0};
+    char fibMax[STRING_MAX_MEDIUM] = {0};
 
     /* Convert the max fibonacci number to a string. */
     sprintf(fibMax, "%d", MAX_OPTION_FIBONACCI);
@@ -162,13 +152,9 @@ void fibonacciNumbers(int *optionStats) {
         printf("Average: %.2f\n", average);
 
         /* Increment the statistics. */
-        performOptionStatAction(optionStats, eOptionStatIncrement,
-                MENU_TITLE_FIBONACCI);
+        statAction(optionStats, eOptionStatIncrement, MENU_TITLE_FIBONACCI);
 
     }
-
-    /* Cleanup. */
-    freeStrings(2, &message, &fibMax);
 
 }
 
@@ -181,36 +167,18 @@ void fibonacciNumbers(int *optionStats) {
 void phoneNumbers(int *optionStats) {
 
     int i = 0 ;
-    char *input = null;
-    char *output = null;
-    char *message = null;
+    char input[STRING_MAX_TINY + EXTRA_SPACE] = {0};
+    char output[STRING_MAX_TINY + EXTRA_SPACE] = {0};
+    char message[STRING_MAX_MEDIUM] = {0};
     keypad_t *ptr = null;
-    keypad_t keypad[] = {
-        {2, "ABC"},
-        {3, "DEF"},
-        {4, "GHI"},
-        {5, "JKL"},
-        {6, "MNO"},
-        {7, "PQRS"}, /* added Q */
-        {8, "TUV"},
-        {9, "WXYZ"},
-        {MAX_KEYPAD, null}
-    };
-
-    /* Try to allocate memory. Cleanup if it fails. */
-    if (!allocateString(&input, STRING_MAX_TINY + EXTRA_SPACE) ||
-        !allocateString(&output, STRING_MAX_TINY + EXTRA_SPACE) ||
-        !allocateString(&message, STRING_MAX_MEDIUM)){
-        freeStrings(3, &input, &output, &message);
-        return;
-    }
+    keypad_t *keypad = getKeypad();
 
     /* Create formatted input request message. */
     sprintf(message, "Enter phone number (max %d characters): ",
             STRING_MAX_TINY);
 
     /* Ask the user for a phone number. */
-    if (getStringFromStdIn(&input, STRING_MAX_TINY, message,
+    if (getStringFromStdIn(input, STRING_MAX_TINY, message,
             STRING_MIN_NONE, true)
             && strlen(input) > 0){
 
@@ -251,13 +219,9 @@ void phoneNumbers(int *optionStats) {
         printf("%s\n", output);
 
         /* Increment the statistics. */
-        performOptionStatAction(optionStats, eOptionStatIncrement,
-                MENU_TITLE_PHONENUMBERS);
+        statAction(optionStats, eOptionStatIncrement, MENU_TITLE_PHONENUMBERS);
 
     }
-
-    /* Cleanup. */
-    freeStrings(3, &input, &output, &message);
 
 }
 
@@ -276,18 +240,11 @@ void firstLastStrings(int *optionStats) {
 
     int bufferCount = 0;
     int bufferPower = START_POWER;
-    char *input = null;
-    char *message = null;
+    char input[STRING_MAX_SMALL + EXTRA_SPACE] = {0};
+    char message[STRING_MAX_MEDIUM] = {0};
     char *dashed = createDashes("Finding strings");
     char *buffer[STRING_MAX_LARGE];
     bool passed = false;
-
-    /* Try to allocate memory. Cleanup if it fails. */
-    if (!allocateString(&input, STRING_MAX_SMALL + EXTRA_SPACE) ||
-        !allocateString(&message, STRING_MAX_MEDIUM)){
-        freeStrings(3, &input, &message, &dashed);
-        return;
-    }
 
     printf("%s\n", dashed);
     sprintf(message, "Enter word (%d-%d characters, %c to finish): ",
@@ -300,12 +257,12 @@ void firstLastStrings(int *optionStats) {
     while (!passed){
 
         /* Ask the user for the word. */
-        if (getStringFromStdIn(&input, STRING_MAX_SMALL, message,
+        if (getStringFromStdIn(input, STRING_MAX_SMALL, message,
                 STRING_MIN_NONE, true)){
 
             /* If the user didn't enter anything, cleanup and go home. */
             if (strlen(input) == STRING_MIN_NONE){
-                freeStrings(3, &input, &message, &dashed);
+                freeString(&dashed);
                 freeStringArray(buffer, bufferCount);
                 return;
             }
@@ -339,11 +296,11 @@ void firstLastStrings(int *optionStats) {
                     );
 
                     /* Increment the statistics. */
-                    performOptionStatAction(optionStats, eOptionStatIncrement,
+                    statAction(optionStats, eOptionStatIncrement,
                             MENU_TITLE_FIRSTLASTSTRINGS);
 
                     /* Cleanup. */
-                    freeStrings(3, &input, &message, &dashed);
+                    freeString(&dashed);
                     freeStringArray(buffer, bufferCount);
 
                     /* Set flag to exit loop. */
@@ -358,7 +315,7 @@ void firstLastStrings(int *optionStats) {
 
                 /* Try to allocate memory, cleanup if it fails. */
                 if (!allocateString(&buffer[bufferCount], strlen(input) + EXTRA_SPACE)){
-                    freeStrings(3, &input, &message, &dashed);
+                    freeString(&dashed);
                     freeStringArray(buffer, bufferCount);
                     return;
                 }
@@ -372,7 +329,7 @@ void firstLastStrings(int *optionStats) {
                     /* Try to allocate memory, cleanup if it fails. */
                     if (!allocateString(&buffer[bufferCount],
                             STRING_MAX_LARGE * ++bufferPower)){
-                        freeStrings(3, &input, &message, &dashed);
+                        freeString(&dashed);
                         freeStringArray(buffer, bufferCount);
                         return;
                     }
@@ -407,19 +364,11 @@ void firstLastStrings(int *optionStats) {
 void wordStopping(int *optionStats) {
 
     char *chr = null;
-    char *input = null;
-    char *message = null;
-    char *buffer = null;
+    char input[STRING_MAX_SMALL + EXTRA_SPACE] = {0};
+    char buffer[STRING_MAX_SMALL + EXTRA_SPACE] = {0};
+    char message[STRING_MAX_MEDIUM] = {0};
     char delim[] = {WORD_SEPARATOR, '\0'};
     int i = 0;
-
-    /* Try to allocate memory, cleanup if it fails. */
-    if (!allocateString(&input, STRING_MAX_SMALL + EXTRA_SPACE) ||
-        !allocateString(&buffer, STRING_MAX_SMALL + EXTRA_SPACE) ||
-        !allocateString(&message, STRING_MAX_MEDIUM)){
-        freeStrings(3, &input, &buffer, &message);
-        return;
-    }
 
     sprintf(message, "Enter a string (%d-%d characters): ",
         STRING_MIN,
@@ -433,14 +382,12 @@ void wordStopping(int *optionStats) {
         if (i++ > 0)
             memset(input, 0, sizeof(char) * STRING_MAX_SMALL);
 
-    } while (!getStringFromStdIn(&input, STRING_MAX_SMALL, message,
+    } while (!getStringFromStdIn(input, STRING_MAX_SMALL, message,
             STRING_MIN_NONE, true));
 
-    /* User aborted. Cleanup and go home. */
-    if (strlen(input) == 0){
-        freeStrings(3, &input, &buffer, &message);
+    /* User aborted. Exit. */
+    if (strlen(input) == 0)
         return;
-    }
 
     /* Loop through the sentence, splitting it into words
      * with the delim (space) and append valid words to the output. */
@@ -488,11 +435,7 @@ void wordStopping(int *optionStats) {
         printf("\nStopped string: %s\n", buffer);
 
     /* Increment statistics. */
-    performOptionStatAction(optionStats, eOptionStatIncrement,
-            MENU_TITLE_WORDSTOPPING);
-
-    /* Cleanup. */
-    freeStrings(3, &input, &buffer, &message);
+    statAction(optionStats, eOptionStatIncrement, MENU_TITLE_WORDSTOPPING);
 
 }
 
@@ -508,17 +451,10 @@ void rookAndTheBishop(int *optionStats) {
     int row = 0;
     int column = 0;
     char chr = 0;
-    char *piece = null;
-    char *message = null;
-    char board[CHESS_ROW_MAX][CHESS_COLUMN_MAX + 1] = {{0}};
+    char message[STRING_MAX_MEDIUM] = {0};
+    char piece[MAX_OPTION_INPUT + EXTRA_SPACE] = {0};
+    char board[CHESS_ROW_MAX][CHESS_COLUMN_MAX + EXTRA_SPACE] = {{0}};
     bool passed = false;
-
-    /* Try to allocate memory, clean up if it fails. */
-    if (!allocateString(&piece, MAX_OPTION_INPUT + EXTRA_SPACE) ||
-        !allocateString(&message, STRING_MAX_MEDIUM)){
-        freeStrings(2, &piece, &message);
-        return;
-    }
 
     sprintf(message, "Enter Piece type (%c/%c): ", eChessRook, eChessBishop);
 
@@ -527,17 +463,15 @@ void rookAndTheBishop(int *optionStats) {
 
         /* Reset the piece to null if we have already been here. */
         if (piece[0] != '\0')
-            memset(piece, 0, MAX_OPTION_INPUT);
+            memset(piece, 0, sizeof(char) * MAX_OPTION_INPUT);
 
         /* Ask the user for a character. */
-        if (getStringFromStdIn(&piece, MAX_OPTION_INPUT, message,
+        if (getStringFromStdIn(piece, MAX_OPTION_INPUT, message,
                 STRING_MIN_NONE, true)){
 
-            /* User aborted. Cleanup and go home. */
-            if (strlen(piece) == 0){
-                freeStrings(2, &piece, &message);
+            /* User aborted. Exit. */
+            if (strlen(piece) == 0)
                 return;
-            }
 
             /* Convert letter to upper case. */
             chr = toupper(piece[0]);
@@ -564,11 +498,9 @@ void rookAndTheBishop(int *optionStats) {
         if (getIntegerFromStdIn(&row, MAX_OPTION_INPUT, message, CHESS_ROW_MIN,
                 CHESS_ROW_MAX - 1, true, true)){
 
-            /* User aborted, Cleanup and go home. */
-            if (row == CHESS_ROW_MIN - 1){
-                freeStrings(2, &piece, &message);
+            /* User aborted, Exit. */
+            if (row == CHESS_ROW_MIN - 1)
                 return;
-            }
 
             passed = true;
         }
@@ -590,11 +522,9 @@ void rookAndTheBishop(int *optionStats) {
         if (getIntegerFromStdIn(&column, MAX_OPTION_INPUT, message,
                 CHESS_COLUMN_MIN, CHESS_COLUMN_MAX - 1, true, true)){
 
-            /* User aborted. Cleanup and go home. */
-            if (column == CHESS_COLUMN_MIN - 1){
-                freeStrings(2, &piece, &message);
+            /* User aborted. Exit. */
+            if (column == CHESS_COLUMN_MIN - 1)
                 return;
-            }
 
             passed = true;
         }
@@ -609,11 +539,7 @@ void rookAndTheBishop(int *optionStats) {
         printf("%s\n", board[i]);
 
     /* Increment statistics. */
-    performOptionStatAction(optionStats, eOptionStatIncrement,
-            MENU_TITLE_ROOKANDBISHOP);
-
-    /* Cleanup. */
-    freeStrings(2, &piece, &message);
+    statAction(optionStats, eOptionStatIncrement, MENU_TITLE_ROOKANDBISHOP);
 
 }
 
@@ -628,22 +554,13 @@ void sessionSummary(int *optionStats) {
     char *option = "Option";
     char *count = "Count";
     char *dashed = createDashes(title);
-    char *spaces = null;
-    char *optionDashes = null;
-    char *countDashes = null;
-    const int spaceLength = strlen(title) - strlen(option) - strlen(count);
+    char spaces[STRING_MAX_MEDIUM] = {0};
+    char optionDashes[STRING_MAX_SMALL] = {0};
+    char countDashes[STRING_MAX_SMALL] = {0};
     menuoption_t *options = getMenuOptions();
 
-    /* Try to allocate memory, cleanup if it fails. */
-    if (!allocateString(&spaces, spaceLength + EXTRA_SPACE) ||
-        !allocateString(&optionDashes, strlen(option) + EXTRA_SPACE) ||
-        !allocateString(&countDashes, strlen(count) + EXTRA_SPACE)){
-        freeStrings(4, &spaces, &optionDashes, &countDashes, &dashed);
-        return;
-    }
-
     /* Set the spaces. */
-    memset(spaces, SPACE_CHAR, spaceLength);
+    memset(spaces, SPACE_CHAR, strlen(title) - strlen(option) - strlen(count));
 
     /* Set the dashes, to be used for underlining. */
     memset(optionDashes, DASH_CHAR, strlen(option));
@@ -670,7 +587,7 @@ void sessionSummary(int *optionStats) {
             );
 
     /* Cleanup. */
-    freeStrings(4, &spaces, &optionDashes, &countDashes, &dashed);
+    freeString(&dashed);
 
 }
 
@@ -700,21 +617,18 @@ void readRestOfLine() {
  * Source: Steven Burrows
  * URL: https://www.dlsweb.rmit.edu.au/set/Courses/Content/CSIT/oua/cpt220/c-function-examples/InputValidation/getInteger-advanced.c
  * */
-bool getIntegerFromStdIn(int *result, int length, const char *message,
-        int min, int max, bool showError, bool allowEmpty){
+bool getIntegerFromStdIn(int *result, const int length, const char *message,
+        const int min, const int max, bool showError, bool allowEmpty){
 
     int i = 0;
+    char errorMessage[STRING_MAX_MEDIUM] = {0};
     char *s = null;
-    char *s2 = null;
-    char *errorMessage = null;
+    char *endPtr = null;
     bool passed = false;
 
-    /* Try to allocate memory, cleanup if it fails. */
-    if (!allocateString(&s, length + EXTRA_SPACES) ||
-        !allocateString(&errorMessage, STRING_MAX_MEDIUM)){
-        freeStrings(2, &s, &errorMessage);
+    /* Try to allocate memory, exit if it fails. */
+    if (!allocateString(&s, length + EXTRA_SPACES))
         return false;
-    }
 
     sprintf(errorMessage, "%s %d %s %d. %s",
         "You must enter a number between",
@@ -742,7 +656,7 @@ bool getIntegerFromStdIn(int *result, int length, const char *message,
             *result = min - 1;
 
             /* Cleanup our mess. */
-            freeStrings(2, &s, &errorMessage);
+            freeString(&s);
             break;
         }
 
@@ -761,10 +675,10 @@ bool getIntegerFromStdIn(int *result, int length, const char *message,
             s[strlen(s) - 1] = '\0';
 
             /* Convert the string to a decimal based long. */
-            i = (int) strtol(s, &s2, BASE10);
+            i = (int) strtol(s, &endPtr, BASE10);
 
             /* Validate the number (if it is indeed a number). */
-            if (strcmp(s2, "") != 0 || i < min || i > max) {
+            if (strcmp(endPtr, "") != 0 || i < min || i > max) {
 
                 /* Only inform the user if we are told to. */
                 if (showError){
@@ -778,7 +692,7 @@ bool getIntegerFromStdIn(int *result, int length, const char *message,
                     *result = min - 1;
 
                     /* Cleanup before returning the failure flag. */
-                    freeStrings(2, &s, &errorMessage);
+                    freeString(&s);
                     return false;
 
                 }
@@ -793,7 +707,7 @@ bool getIntegerFromStdIn(int *result, int length, const char *message,
                 passed = true;
 
                 /* Cleanup. */
-                freeStrings(2, &s, &errorMessage);
+                freeString(&s);
 
             }
 
@@ -814,19 +728,16 @@ bool getIntegerFromStdIn(int *result, int length, const char *message,
  * Source: Steven Burrows
  * URL: https://www.dlsweb.rmit.edu.au/set/Courses/Content/CSIT/oua/cpt220/c-function-examples/InputValidation/getString-advanced.c
  * */
-bool getStringFromStdIn(char **result, int length, const char *message,
+bool getStringFromStdIn(char *result, int length, const char *message,
         int min, bool showError){
 
-    char *s = null;
-    char *errorMessage = null;
+    char * s = null;
+    char errorMessage[STRING_MAX_MEDIUM] = {0};
     bool passed = false;
 
-    /* Try to allocate memory, cleanup if it fails. */
-    if (!allocateString(&s, length + EXTRA_SPACES) ||
-        !allocateString(&errorMessage, STRING_MAX_MEDIUM)){
-        freeStrings(2, &s, &errorMessage);
+    /* Try to allocate memory, exit if it fails. */
+    if (!allocateString(&s, length + EXTRA_SPACES))
         return false;
-    }
 
     sprintf(errorMessage, "Invalid entry! Try again.\n");
 
@@ -867,7 +778,7 @@ bool getStringFromStdIn(char **result, int length, const char *message,
             s[len - 1] = '\0';
 
             /* Copy the string to the result. */
-            strcpy(*result, s);
+            strcpy(result, s);
 
             /* Break the loop, and set the success flag. */
             passed = true;
@@ -877,7 +788,7 @@ bool getStringFromStdIn(char **result, int length, const char *message,
     }
 
     /* Cleanup. */
-    freeStrings(2, &s, &errorMessage);
+    freeString(&s);
 
     return passed;
 
@@ -885,7 +796,7 @@ bool getStringFromStdIn(char **result, int length, const char *message,
 
 /* This function is used for dynamic string allocation.
  * It will allocate the required memory, then set allocated bytes to null. */
-bool allocateString(char **str, int size){
+bool allocateString(char **str, const int size){
 
     bool result = false;
     /* The required size. */
@@ -933,7 +844,7 @@ void freeString(char **str){
 }
 
 /* This function is used to delete an array of dynamic strings. */
-void freeStringArray(char **arr, int length){
+void freeStringArray(char **arr, const int length){
 
     int i = 0;
 
@@ -947,7 +858,7 @@ void freeStringArray(char **arr, int length){
 
 /* This function is used as a helper function to delete an indefinite
  * number of dynamic strings. */
-void freeStrings(int length, ...){
+void freeStrings(const int length, ...){
 
     int i = 0;
     va_list ap;
@@ -1002,8 +913,8 @@ char *createDashes(const char *str){
 }
 
 /* This function plots all the appropriate chess pieces on the chess board. */
-void plotChessPieces(char piece, int row, int column,
-        char board[][CHESS_COLUMN_MAX + 1]){
+void plotChessPieces(const char piece, const int row, const int column,
+        char board[][CHESS_COLUMN_MAX + EXTRA_SPACE]){
 
     int i = 0;
     int j = 0;
@@ -1061,7 +972,7 @@ void plotChessPieces(char piece, int row, int column,
 
 /* This function checks if the chess piece corresponds to the chessPiece
  * enumeration values. */
-bool isValidChessPiece(char c){
+bool isValidChessPiece(const char c){
 
     /* Chess piece validation. Test against chessPiece enumeration.*/
     return c == eChessRook || c == eChessBishop;
@@ -1077,6 +988,26 @@ void exitApplication(int *abort){
 
     /* Set the abort flag to true. This in turn will break the main menu loop. */
     *abort = true;
+
+}
+
+/* This function creates the keypad statically,
+ * and keeps returning same keypad. I added Q myself since it was missing. */
+keypad_t *getKeypad(){
+
+    static keypad_t keypad[] = {
+        {2, "ABC"},
+        {3, "DEF"},
+        {4, "GHI"},
+        {5, "JKL"},
+        {6, "MNO"},
+        {7, "PQRS"}, /* added Q */
+        {8, "TUV"},
+        {9, "WXYZ"},
+        {MAX_KEYPAD, null}
+    };
+
+    return keypad;
 
 }
 
@@ -1134,7 +1065,7 @@ menuoption_t *getMenuOptions(){
 }
 
 /* This function is used to lookup a menu option by it's index. */
-menuoption_t *getMenuOptionByIndex(int index){
+menuoption_t *getMenuOptionByIndex(const int index){
 
     menuoption_t *ptr = getMenuOptions();
 
@@ -1149,7 +1080,7 @@ menuoption_t *getMenuOptionByIndex(int index){
 }
 
 /* This function is used to lookup a menu option by it's title. */
-menuoption_t *getMenuOptionByTitle(char *title){
+menuoption_t *getMenuOptionByTitle(const char *title){
 
     menuoption_t *ptr = getMenuOptions();
 
@@ -1165,8 +1096,7 @@ menuoption_t *getMenuOptionByTitle(char *title){
 }
 
 /* This function is used to modify the optionStat array. */
-void performOptionStatAction(int *optionStats, optionStatAction action,
-        char *title){
+void statAction(int *optionStats, optionStatAction action, const char *title){
 
     int i = 0;
 
