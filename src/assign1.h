@@ -2,7 +2,7 @@
 * COSC2138 / CPT220- Assignment #1
 * Programming Principles 2A/Programming Techniques
 * Author           : Greg Kappatos
-* Student Number   : s3460969
+* Student Number   :
 * Start up code provided by the C-Teach team
 ****************************************************************************/
 
